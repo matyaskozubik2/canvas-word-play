@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, Palette, Send, Menu } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Palette, Send, Menu, Maximize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +53,7 @@ const Game = () => {
 
   const timerRef = useRef<NodeJS.Timeout>();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!players || !playerName) {
@@ -183,83 +184,132 @@ const Game = () => {
     setCurrentGuess('');
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch(() => {
+        toast({
+          title: "Chyba",
+          description: "Nepodařilo se přepnout na celou obrazovku",
+          variant: "destructive"
+        });
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      });
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const isCurrentDrawer = gameState.currentDrawer === playerName;
   const shouldHideSidebarOnMobile = isMobile && isCurrentDrawer;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 overflow-hidden">
       {/* Header */}
-      <header className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+      <header className="p-2 sm:p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
             <Button 
               variant="outline" 
               size="icon"
               onClick={() => navigate('/lobby')}
-              className="rounded-full"
+              className="rounded-full flex-shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="text-xl font-bold">DrawGuess</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Místnost: {roomCode}</p>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold truncate">DrawGuess</h1>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">Místnost: {roomCode}</p>
             </div>
           </div>
 
+          <div className="hidden sm:block">
+            <GameProgress 
+              currentRound={gameState.currentRound}
+              totalRounds={gameState.totalRounds}
+              timeLeft={gameState.timeLeft}
+              totalTime={gameSettings.drawTime}
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            {/* Fullscreen button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleFullscreen}
+              className="rounded-full"
+            >
+              <Maximize className="w-4 h-4" />
+            </Button>
+
+            {/* Mobile sidebar toggle */}
+            {shouldHideSidebarOnMobile && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+                className="md:hidden rounded-full"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+            )}
+            
+            <div className="text-center hidden sm:block">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Kreslí</div>
+              <div className="font-bold">{gameState.currentDrawer}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile progress bar */}
+        <div className="sm:hidden mt-2">
           <GameProgress 
             currentRound={gameState.currentRound}
             totalRounds={gameState.totalRounds}
             timeLeft={gameState.timeLeft}
             totalTime={gameSettings.drawTime}
           />
-
-          <div className="flex items-center space-x-4">
-            {/* Mobile sidebar toggle - only show when sidebar is hidden */}
-            {shouldHideSidebarOnMobile && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-                className="md:hidden"
-              >
-                <Menu className="w-4 h-4" />
-              </Button>
-            )}
-            
-            <div className="text-center">
-              <div className="text-sm text-gray-600 dark:text-gray-400">Kreslí</div>
-              <div className="font-bold">{gameState.currentDrawer}</div>
-            </div>
-          </div>
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] overflow-hidden">
         {/* Game Area */}
-        <div className={`${shouldHideSidebarOnMobile && !showMobileSidebar ? 'w-full' : 'flex-1'} p-4`}>
-          <Card className="h-full">
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-center">
-                <div>
+        <div className={`${shouldHideSidebarOnMobile && !showMobileSidebar ? 'w-full' : 'flex-1'} p-2 sm:p-4 min-w-0`}>
+          <Card className="h-full overflow-hidden">
+            <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6">
+              <div className="flex justify-between items-center gap-2">
+                <div className="min-w-0 flex-1">
                   {isCurrentDrawer ? (
                     <div className="flex items-center space-x-2">
-                      <Palette className="w-5 h-5 text-purple-500" />
-                      <span className="text-lg font-bold">Kreslíte: {gameState.currentWord}</span>
+                      <Palette className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500 flex-shrink-0" />
+                      <span className="text-sm sm:text-lg font-bold truncate">Kreslíte: {gameState.currentWord}</span>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold">Hádejte, co kreslí {gameState.currentDrawer}!</span>
+                      <span className="text-sm sm:text-lg font-bold truncate">Hádejte, co kreslí {gameState.currentDrawer}!</span>
                     </div>
                   )}
                 </div>
                 
-                <Badge variant="outline" className="text-lg px-4 py-2">
-                  <Clock className="w-4 h-4 mr-2" />
+                <Badge variant="outline" className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-2 flex-shrink-0">
+                  <Clock className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                   {gameState.timeLeft}s
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="h-[calc(100%-100px)]">
+            <CardContent className="h-[calc(100%-60px)] sm:h-[calc(100%-100px)] p-2 sm:p-6">
               <DrawingCanvas 
                 canDraw={isCurrentDrawer}
                 className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700"
@@ -268,9 +318,9 @@ const Game = () => {
           </Card>
         </div>
 
-        {/* Sidebar - hide on mobile when current user is drawing, unless explicitly shown */}
+        {/* Sidebar */}
         {(!shouldHideSidebarOnMobile || showMobileSidebar) && (
-          <div className={`w-80 p-4 space-y-4 ${shouldHideSidebarOnMobile ? 'absolute right-0 top-0 h-full bg-white dark:bg-gray-900 z-50 shadow-xl' : ''}`}>
+          <div className={`w-80 max-w-[90vw] p-2 sm:p-4 space-y-4 overflow-hidden ${shouldHideSidebarOnMobile ? 'absolute right-0 top-0 h-full bg-white dark:bg-gray-900 z-50 shadow-xl' : ''}`}>
             {/* Close button for mobile overlay */}
             {shouldHideSidebarOnMobile && showMobileSidebar && (
               <div className="flex justify-end mb-4 pt-4">
@@ -285,24 +335,24 @@ const Game = () => {
             )}
 
             {/* Scores */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center space-x-2 text-base">
+                  <Users className="w-4 h-4" />
                   <span>Skóre</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-h-48 overflow-y-auto">
                 <div className="space-y-2">
                   {Object.entries(gameState.scores)
                     .sort(([,a], [,b]) => b - a)
                     .map(([player, score]) => (
                     <div key={player} className="flex justify-between items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-                      <span className={`font-semibold ${player === gameState.currentDrawer ? 'text-purple-500' : ''}`}>
-                        {player === gameState.currentDrawer && <Palette className="w-4 h-4 inline mr-1" />}
+                      <span className={`font-semibold text-sm truncate ${player === gameState.currentDrawer ? 'text-purple-500' : ''}`}>
+                        {player === gameState.currentDrawer && <Palette className="w-3 h-3 inline mr-1" />}
                         {player}
                       </span>
-                      <Badge variant="secondary">{score}</Badge>
+                      <Badge variant="secondary" className="ml-2 flex-shrink-0">{score}</Badge>
                     </div>
                   ))}
                 </div>
@@ -310,12 +360,12 @@ const Game = () => {
             </Card>
 
             {/* Chat */}
-            <Card className="flex-1">
-              <CardHeader>
-                <CardTitle>Chat</CardTitle>
+            <Card className="flex-1 flex flex-col overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Chat</CardTitle>
               </CardHeader>
-              <CardContent className="h-[300px] flex flex-col">
-                <ChatBox messages={chatMessages} className="flex-1" />
+              <CardContent className="flex-1 flex flex-col overflow-hidden min-h-0">
+                <ChatBox messages={chatMessages} className="flex-1 overflow-hidden" />
                 
                 {!isCurrentDrawer && !hasGuessedCorrectly && (
                   <div className="flex space-x-2 mt-4">
@@ -324,9 +374,9 @@ const Game = () => {
                       value={currentGuess}
                       onChange={(e) => setCurrentGuess(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && submitGuess()}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     />
-                    <Button onClick={submitGuess} size="icon">
+                    <Button onClick={submitGuess} size="icon" className="flex-shrink-0">
                       <Send className="w-4 h-4" />
                     </Button>
                   </div>
@@ -334,7 +384,7 @@ const Game = () => {
                 
                 {hasGuessedCorrectly && (
                   <div className="mt-4 p-3 bg-green-100 dark:bg-green-900 rounded-lg text-center">
-                    <span className="text-green-700 dark:text-green-300 font-semibold">
+                    <span className="text-green-700 dark:text-green-300 font-semibold text-sm">
                       ✓ Správně! Čekáte na ostatní...
                     </span>
                   </div>
