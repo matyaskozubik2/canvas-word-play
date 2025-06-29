@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle } from 'lucide-react';
+import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle, Dices } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,15 @@ const Index = () => {
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
+  };
+
+  const generateRandomName = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPlayerName(result);
   };
 
   const createRoom = () => {
@@ -128,12 +137,22 @@ const Index = () => {
               <CardDescription>Založte novou hru a pozvěte přátele</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input
-                placeholder="Vaše jméno"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="rounded-xl border-2 focus:border-purple-500 transition-colors"
-              />
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Vaše jméno"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="rounded-xl border-2 focus:border-purple-500 transition-colors flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={generateRandomName}
+                  className="rounded-xl flex-shrink-0"
+                >
+                  <Dices className="w-4 h-4" />
+                </Button>
+              </div>
               <Button 
                 onClick={createRoom}
                 className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
@@ -144,7 +163,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Join Random Game Card - NEW */}
+          {/* Join Random Game Card */}
           <Card className="relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-500"></div>
             <CardHeader className="text-center pb-4">
@@ -155,12 +174,22 @@ const Index = () => {
               <CardDescription>Zahrajte si s neznámými hráči</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input
-                placeholder="Vaše jméno"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="rounded-xl border-2 focus:border-green-500 transition-colors"
-              />
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Vaše jméno"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="rounded-xl border-2 focus:border-green-500 transition-colors flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={generateRandomName}
+                  className="rounded-xl flex-shrink-0"
+                >
+                  <Dices className="w-4 h-4" />
+                </Button>
+              </div>
               <Button 
                 onClick={joinRandomGame}
                 className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
@@ -182,12 +211,22 @@ const Index = () => {
               <CardDescription>Vstupte do existující místnosti</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input
-                placeholder="Vaše jméno"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="rounded-xl border-2 focus:border-blue-500 transition-colors"
-              />
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Vaše jméno"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={generateRandomName}
+                  className="rounded-xl flex-shrink-0"
+                >
+                  <Dices className="w-4 h-4" />
+                </Button>
+              </div>
               <Input
                 placeholder="Kód místnosti"
                 value={roomCode}

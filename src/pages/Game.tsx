@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Palette, Send, Menu, Maximize } from 'lucide-react';
@@ -19,6 +20,7 @@ interface GameState {
   timeLeft: number;
   phase: 'waiting' | 'drawing' | 'results';
   scores: { [playerId: string]: number };
+  revealedLetters: boolean[];
 }
 
 interface ChatMessage {
@@ -44,7 +46,8 @@ const Game = () => {
     currentWord: 'DEMO SLOVO',
     timeLeft: gameSettings?.drawTime || 80,
     phase: 'drawing',
-    scores: {}
+    scores: {},
+    revealedLetters: []
   });
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -52,6 +55,7 @@ const Game = () => {
   const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout>();
+  const hintTimerRef = useRef<NodeJS.Timeout>();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -66,14 +70,28 @@ const Game = () => {
     players.forEach((player: any) => {
       initialScores[player.name] = 0;
     });
-    setGameState(prev => ({ ...prev, scores: initialScores }));
+    
+    // Initialize revealed letters
+    const word = getRandomWord();
+    const initialRevealed = new Array(word.length).fill(false);
+    
+    setGameState(prev => ({ 
+      ...prev, 
+      scores: initialScores,
+      currentWord: word,
+      revealedLetters: initialRevealed
+    }));
 
     // Start game timer
     startTimer();
+    startHintTimer();
 
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (hintTimerRef.current) {
+        clearInterval(hintTimerRef.current);
       }
     };
   }, []);
@@ -90,12 +108,38 @@ const Game = () => {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
+          if (hintTimerRef.current) {
+            clearInterval(hintTimerRef.current);
+          }
           endRound();
           return { ...prev, timeLeft: 0, phase: 'results' };
         }
         return { ...prev, timeLeft: prev.timeLeft - 1 };
       });
     }, 1000);
+  };
+
+  const startHintTimer = () => {
+    if (hintTimerRef.current) {
+      clearInterval(hintTimerRef.current);
+    }
+
+    // Reveal letters every 15 seconds
+    hintTimerRef.current = setInterval(() => {
+      setGameState(prev => {
+        const newRevealed = [...prev.revealedLetters];
+        const unrevealedIndices = newRevealed
+          .map((revealed, index) => revealed ? null : index)
+          .filter(index => index !== null) as number[];
+        
+        if (unrevealedIndices.length > 0) {
+          const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
+          newRevealed[randomIndex] = true;
+        }
+        
+        return { ...prev, revealedLetters: newRevealed };
+      });
+    }, 15000);
   };
 
   const endRound = () => {
@@ -124,19 +168,23 @@ const Game = () => {
   const nextRound = () => {
     const nextDrawerIndex = (players.findIndex((p: any) => p.name === gameState.currentDrawer) + 1) % players.length;
     const nextDrawer = players[nextDrawerIndex].name;
+    const word = getRandomWord();
+    const initialRevealed = new Array(word.length).fill(false);
     
     setGameState(prev => ({
       ...prev,
       currentRound: prev.currentRound + 1,
       currentDrawer: nextDrawer,
-      currentWord: getRandomWord(),
+      currentWord: word,
       timeLeft: gameSettings.drawTime,
-      phase: 'drawing'
+      phase: 'drawing',
+      revealedLetters: initialRevealed
     }));
     
     setHasGuessedCorrectly(false);
     setChatMessages([]);
     startTimer();
+    startHintTimer();
   };
 
   const getRandomWord = () => {
@@ -145,6 +193,16 @@ const Game = () => {
       'HRAD', 'LETADLO', 'RYBA', 'HORA', 'ČOKOLÁDA', 'KLAVÍR', 'MOTÝL', 'ZÁMEK'
     ];
     return words[Math.floor(Math.random() * words.length)];
+  };
+
+  const getDisplayWord = () => {
+    return gameState.currentWord
+      .split('')
+      .map((letter, index) => {
+        if (letter === ' ') return ' ';
+        return gameState.revealedLetters[index] ? letter : '_';
+      })
+      .join(' ');
   };
 
   const submitGuess = () => {
@@ -289,27 +347,40 @@ const Game = () => {
         <div className={`${shouldHideSidebarOnMobile && !showMobileSidebar ? 'w-full' : 'flex-1'} p-2 sm:p-4 min-w-0`}>
           <Card className="h-full overflow-hidden">
             <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6">
-              <div className="flex justify-between items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  {isCurrentDrawer ? (
-                    <div className="flex items-center space-x-2">
-                      <Palette className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500 flex-shrink-0" />
-                      <span className="text-sm sm:text-lg font-bold truncate">Kreslíte: {gameState.currentWord}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm sm:text-lg font-bold truncate">Hádejte, co kreslí {gameState.currentDrawer}!</span>
-                    </div>
-                  )}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    {isCurrentDrawer ? (
+                      <div className="flex items-center space-x-2">
+                        <Palette className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500 flex-shrink-0" />
+                        <span className="text-sm sm:text-lg font-bold truncate">Kreslíte: {gameState.currentWord}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm sm:text-lg font-bold truncate">Hádejte, co kreslí {gameState.currentDrawer}!</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Badge variant="outline" className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-2 flex-shrink-0">
+                    <Clock className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+                    {gameState.timeLeft}s
+                  </Badge>
                 </div>
                 
-                <Badge variant="outline" className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-2 flex-shrink-0">
-                  <Clock className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                  {gameState.timeLeft}s
-                </Badge>
+                {!isCurrentDrawer && (
+                  <div className="text-center">
+                    <div className="text-lg sm:text-2xl font-mono font-bold text-purple-600 dark:text-purple-400 tracking-widest">
+                      {getDisplayWord()}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      {gameState.currentWord.length} písmen
+                    </div>
+                  </div>
+                )}
               </div>
             </CardHeader>
-            <CardContent className="h-[calc(100%-60px)] sm:h-[calc(100%-100px)] p-2 sm:p-6">
+            <CardContent className="h-[calc(100%-100px)] sm:h-[calc(100%-140px)] p-2 sm:p-6">
               <DrawingCanvas 
                 canDraw={isCurrentDrawer}
                 className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700"
