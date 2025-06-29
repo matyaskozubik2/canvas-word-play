@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, Users, Palette, Gamepad2, Settings } from 'lucide-react';
+import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +50,36 @@ const Index = () => {
     navigate('/lobby', { state: { playerName, roomCode, isHost: false } });
   };
 
+  const joinRandomGame = () => {
+    if (!playerName.trim()) {
+      toast({
+        title: "Chyba",
+        description: "Prosím, zadejte své jméno",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simulate finding a random game
+    toast({
+      title: "Hledám hru...",
+      description: "Připojuji vás k náhodné hře s jinými hráči",
+    });
+
+    // Simulate delay for finding a game
+    setTimeout(() => {
+      const randomRoomCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+      navigate('/lobby', { 
+        state: { 
+          playerName, 
+          roomCode: randomRoomCode, 
+          isHost: false,
+          isRandomGame: true 
+        } 
+      });
+    }, 1500);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 transition-all duration-500">
       {/* Header */}
@@ -86,7 +116,7 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           {/* Create Room Card */}
           <Card className="relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
@@ -110,6 +140,33 @@ const Index = () => {
               >
                 <Gamepad2 className="w-5 h-5 mr-2" />
                 Vytvořit hru
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Join Random Game Card - NEW */}
+          <Card className="relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-500"></div>
+            <CardHeader className="text-center pb-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
+                <Shuffle className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl">Náhodná hra</CardTitle>
+              <CardDescription>Zahrajte si s neznámými hráči</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="Vaše jméno"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                className="rounded-xl border-2 focus:border-green-500 transition-colors"
+              />
+              <Button 
+                onClick={joinRandomGame}
+                className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
+              >
+                <Shuffle className="w-5 h-5 mr-2" />
+                Najít hru
               </Button>
             </CardContent>
           </Card>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Copy, Crown, Users, Settings, Play, ArrowLeft } from 'lucide-react';
+import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,7 @@ const Lobby = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { playerName, roomCode: initialRoomCode, isHost } = location.state || {};
+  const { playerName, roomCode: initialRoomCode, isHost, isRandomGame } = location.state || {};
 
   const [roomCode, setRoomCode] = useState(initialRoomCode || generateRoomCode());
   const [players, setPlayers] = useState<Player[]>([]);
@@ -50,20 +50,32 @@ const Lobby = () => {
     };
     setPlayers([currentPlayer]);
 
-    // Simulate other players joining
-    if (isHost) {
+    // Simulate other players joining (more players for random games)
+    if (isHost || isRandomGame) {
+      const playersToAdd = isRandomGame ? 3 : 1; // More players in random games
+      
       setTimeout(() => {
-        const newPlayer: Player = {
-          id: Math.random().toString(36),
-          name: "Demo Hráč",
-          isHost: false,
-          isReady: true,
-          avatar: generateAvatar("Demo Hráč")
-        };
-        setPlayers(prev => [...prev, newPlayer]);
+        const newPlayers: Player[] = [];
+        for (let i = 0; i < playersToAdd; i++) {
+          const randomNames = isRandomGame 
+            ? ["Alex", "Sarah", "Mike", "Emma", "Tom", "Lisa", "Jake", "Anna"]
+            : ["Demo Hráč"];
+          
+          const randomName = randomNames[Math.floor(Math.random() * randomNames.length)] + 
+                           (isRandomGame ? Math.floor(Math.random() * 100) : '');
+          
+          newPlayers.push({
+            id: Math.random().toString(36),
+            name: randomName,
+            isHost: false,
+            isReady: Math.random() > 0.5, // Random ready state
+            avatar: generateAvatar(randomName)
+          });
+        }
+        setPlayers(prev => [...prev, ...newPlayers]);
       }, 2000);
     }
-  }, [playerName, isHost, navigate]);
+  }, [playerName, isHost, isRandomGame, navigate]);
 
   function generateRoomCode(): string {
     return Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -134,8 +146,18 @@ const Lobby = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Lobby</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Připravte se na hru!</p>
+            <h1 className="text-2xl font-bold flex items-center space-x-2">
+              <span>Lobby</span>
+              {isRandomGame && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Shuffle className="w-3 h-3 mr-1" />
+                  Náhodná hra
+                </Badge>
+              )}
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {isRandomGame ? "Připojeni k náhodné hře!" : "Připravte se na hru!"}
+            </p>
           </div>
         </div>
 
@@ -174,11 +196,26 @@ const Lobby = () => {
           {/* Game Settings & Controls */}
           <div className="space-y-6">
             {/* Game Settings */}
-            {currentPlayer?.isHost && (
+            {currentPlayer?.isHost && !isRandomGame && (
               <GameSettings 
                 settings={gameSettings}
                 onSettingsChange={setGameSettings}
               />
+            )}
+
+            {/* Random Game Info */}
+            {isRandomGame && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Shuffle className="w-5 h-5 text-green-500" />
+                    <span>Náhodná hra</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-400">
+                  <p>Připojili jste se k náhodné hře s dalšími hráči. Nastavení hry určuje hostitel místnosti.</p>
+                </CardContent>
+              </Card>
             )}
 
             {/* Ready/Start Controls */}
