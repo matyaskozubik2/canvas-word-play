@@ -1,73 +1,199 @@
-# Welcome to your Lovable project
 
-## Project info
+# 🎨 DrawGuess - Moderní multiplayerová kreslící hra
 
-**URL**: https://lovable.dev/projects/2f1c5f08-e72d-46da-953e-301c1aa1ec08
+Moderní webová hra inspirovaná skribbl.io s pokročilým designem, real-time funkcionalitou a podporou mobilních zařízení.
 
-## How can I edit this code?
+## ✨ Funkce
 
-There are several ways of editing your application.
+### 🎮 Herní mechaniky
+- **Real-time kreslení** - Plynulé kreslení synchronizované mezi všemi hráči
+- **Chytrý chat** - Automatické rozpoznání správných odpovědí
+- **Vícejazyčná podpora** - Slovníky v češtině, angličtině a dalších jazycích
+- **Pokročilé skórování** - Bodování podle rychlosti odpovědi
+- **Místnosti až pro 12 hráčů** - Flexibilní velikost herních místností
 
-**Use Lovable**
+### 🎨 Design a UX
+- **Moderní UI** - Zaoblený design s gradientními pozadími
+- **Tmavý/světlý režim** - Automatická detekce preferencí systému
+- **Responsivní design** - Optimalizováno pro desktop i mobil
+- **Plynulé animace** - Mikro-interakce a přechody
+- **Glassmorphism efekty** - Moderní průhledné komponenty
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2f1c5f08-e72d-46da-953e-301c1aa1ec08) and start prompting.
+### 🛠️ Technické vlastnosti
+- **TypeScript** - Typová bezpečnost napříč celou aplikací
+- **React 18** - Nejnovější React s concurrent features
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn/UI** - Kvalitní komponenty s přístupností
+- **Canvas API** - Pokročilé kreslicí nástroje
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Rychlý start
 
-**Use your preferred IDE**
+### Předpoklady
+- Node.js 18+ 
+- npm nebo yarn
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Instalace
+```bash
+# Klonování repositáře
+git clone https://github.com/your-username/drawguess.git
+cd drawguess
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Instalace závislostí
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Spuštění vývojového serveru
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Aplikace bude dostupná na `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Struktura projektu
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Znovupoužitelné komponenty
+│   ├── ui/             # Shadcn/UI komponenty
+│   ├── DrawingCanvas.tsx
+│   ├── ChatBox.tsx
+│   ├── GameSettings.tsx
+│   └── ...
+├── pages/              # Stránky aplikace
+│   ├── Index.tsx       # Úvodní stránka
+│   ├── Lobby.tsx       # Lobby místnosti
+│   ├── Game.tsx        # Herní obrazovka
+│   └── Results.tsx     # Výsledky
+├── hooks/              # Custom React hooks
+├── lib/                # Utility funkce
+└── types/              # TypeScript definice
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🎮 Jak hrát
 
-## What technologies are used for this project?
+### 1. Vytvobění nebo připojení ke hře
+- Zadejte své jméno
+- Vytvořte novou místnost nebo se připojte pomocí kódu
+- Čekejte na další hráče
 
-This project is built with:
+### 2. Nastavení hry (pouze hostitel)
+- Počet kol (1-10)
+- Čas na kreslení (30-180s)
+- Maximální počet hráčů (2-12)
+- Výběr jazyka
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3. Hraní
+- **Kreslení**: Když jste na řadě, kreslíte zadané slovo
+- **Hádání**: Ostatní hráči píšou odpovědi do chatu
+- **Bodování**: Body za rychlost správné odpovědi
+- **Kola**: Střídání kreslení mezi všemi hráči
 
-## How can I deploy this project?
+### 4. Výsledky
+- Zobrazení finálního pořadí
+- Statistiky hry
+- Možnost hrát znovu
 
-Simply open [Lovable](https://lovable.dev/projects/2f1c5f08-e72d-46da-953e-301c1aa1ec08) and click on Share -> Publish.
+## 🛠️ Kreslicí nástroje
 
-## Can I connect a custom domain to my Lovable project?
+- **Barevná paleta** - 10 základních barev
+- **Velikost štětce** - 1-20px
+- **Guma** - Mazání částí kresby
+- **Vymazání** - Smazání celé kresby
+- **Export** - Stažení kresby jako PNG
 
-Yes, you can!
+## 🌍 Jazyková podpora
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- 🇨🇿 Čeština (výchozí)
+- 🇺🇸 Angličtina
+- 🇩🇪 Němčina
+- 🇫🇷 Francouzština
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📱 Mobilní podpora
+
+Aplikace je plně optimalizována pro mobilní zařízení:
+- Touch kreslení na canvas
+- Responsivní layout
+- Optimalizované ovládání
+- Gestůre support
+
+## 🔧 Vývoj
+
+### Dostupné skripty
+
+```bash
+# Vývojový server
+npm run dev
+
+# Build pro produkci
+npm run build
+
+# Preview buildu
+npm run preview
+
+# Linting
+npm run lint
+
+# Type checking
+npm run type-check
+```
+
+### Struktura komponent
+
+Komponenty jsou organizovány podle atomic design principů:
+- **Atoms**: Základní UI komponenty (Button, Input, ...)
+- **Molecules**: Kombinace atomů (PlayerCard, ChatMessage, ...)
+- **Organisms**: Komplexní komponenty (GameSettings, DrawingCanvas, ...)
+- **Pages**: Kompletní stránky aplikace
+
+## 🎯 Budoucí vylepšení
+
+### V plánu
+- [ ] Socket.IO backend pro real-time funkcionalidad
+- [ ] MongoDB databáze pro persistenci
+- [ ] Spektator mód
+- [ ] Vlastní balíčky slov
+- [ ] Hlasové zprávy
+- [ ] Replay systém
+- [ ] Turnajový mód
+- [ ] Achievementy a statistiky
+
+### Technické vylepšení
+- [ ] PWA podpora
+- [ ] Offline mód
+- [ ] WebRTC pro P2P komunikaci
+- [ ] Redis cache
+- [ ] Docker kontejnerizace
+
+## 🤝 Přispívání
+
+Příspěvky jsou vítány! Prosím:
+
+1. Forkněte projekt
+2. Vytvořte feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commitněte změny (`git commit -m 'Add some AmazingFeature'`)
+4. Pushněte do branch (`git push origin feature/AmazingFeature`)
+5. Otevřete Pull Request
+
+## 📄 Licence
+
+Tento projekt je licencován pod MIT licencí - detaily viz [LICENSE](LICENSE) soubor.
+
+## 👥 Autoři
+
+- **Váš tým** - *Počáteční práce* - [GitHub](https://github.com/your-username)
+
+## 🙏 Poděkování
+
+- [skribbl.io](https://skribbl.io) za inspiraci originální hry
+- [Shadcn/UI](https://ui.shadcn.com) za kvalitní komponenty
+- [Lucide](https://lucide.dev) za krásné ikony
+- [Tailwind CSS](https://tailwindcss.com) za skvělý CSS framework
+
+## 📞 Podpora
+
+Pokud máte problémy nebo otázky:
+- Otevřete [issue](https://github.com/your-username/drawguess/issues)
+- Pošlete email na support@drawguess.com
+- Navštivte naši [Discord komunitu](https://discord.gg/drawguess)
+
+---
+
+**Užijte si kreslení a hádání!** 🎨✨
