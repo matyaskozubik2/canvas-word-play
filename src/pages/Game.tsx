@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Palette, Send, Menu, Maximize } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DrawingCanvas } from '@/components/DrawingCanvas';
 import { ChatBox } from '@/components/ChatBox';
 import { GameProgress } from '@/components/GameProgress';
@@ -18,9 +18,10 @@ interface GameState {
   currentDrawer: string;
   currentWord: string;
   timeLeft: number;
-  phase: 'waiting' | 'drawing' | 'results';
+  phase: 'waiting' | 'word-selection' | 'drawing' | 'results';
   scores: { [playerId: string]: number };
   revealedLetters: boolean[];
+  wordOptions?: string[];
 }
 
 interface ChatMessage {
@@ -43,11 +44,12 @@ const Game = () => {
     currentRound: 1,
     totalRounds: gameSettings?.rounds || 3,
     currentDrawer: players?.[0]?.name || '',
-    currentWord: 'DEMO SLOVO',
+    currentWord: '',
     timeLeft: gameSettings?.drawTime || 80,
-    phase: 'drawing',
+    phase: 'word-selection',
     scores: {},
-    revealedLetters: []
+    revealedLetters: [],
+    wordOptions: []
   });
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -71,20 +73,15 @@ const Game = () => {
       initialScores[player.name] = 0;
     });
     
-    // Initialize revealed letters
-    const word = getRandomWord();
-    const initialRevealed = new Array(word.length).fill(false);
+    // Generate word options for first round
+    const wordOptions = generateWordOptions();
     
     setGameState(prev => ({ 
       ...prev, 
       scores: initialScores,
-      currentWord: word,
-      revealedLetters: initialRevealed
+      wordOptions: wordOptions,
+      phase: 'word-selection'
     }));
-
-    // Start game timer
-    startTimer();
-    startHintTimer();
 
     return () => {
       if (timerRef.current) {
@@ -95,6 +92,32 @@ const Game = () => {
       }
     };
   }, []);
+
+  const generateWordOptions = () => {
+    const words = [
+      'KOČKA', 'DŮM', 'AUTO', 'STROM', 'SLUNCE', 'KNIHA', 'TELEFON', 'KVĚTINA',
+      'HRAD', 'LETADLO', 'RYBA', 'HORA', 'ČOKOLÁDA', 'KLAVÍR', 'MOTÝL', 'ZÁMEK',
+      'MÍČEK', 'OKNO', 'ŽIDLE', 'KOŠILE', 'JABLKO', 'KOLO', 'PIZZA', 'KLOBOUK'
+    ];
+    
+    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  };
+
+  const selectWord = (selectedWord: string) => {
+    const initialRevealed = new Array(selectedWord.length).fill(false);
+    
+    setGameState(prev => ({
+      ...prev,
+      currentWord: selectedWord,
+      revealedLetters: initialRevealed,
+      phase: 'drawing'
+    }));
+    
+    // Start timers after word selection
+    startTimer();
+    startHintTimer();
+  };
 
   const startTimer = () => {
     if (timerRef.current) {
@@ -168,23 +191,21 @@ const Game = () => {
   const nextRound = () => {
     const nextDrawerIndex = (players.findIndex((p: any) => p.name === gameState.currentDrawer) + 1) % players.length;
     const nextDrawer = players[nextDrawerIndex].name;
-    const word = getRandomWord();
-    const initialRevealed = new Array(word.length).fill(false);
+    const wordOptions = generateWordOptions();
     
     setGameState(prev => ({
       ...prev,
       currentRound: prev.currentRound + 1,
       currentDrawer: nextDrawer,
-      currentWord: word,
+      currentWord: '',
       timeLeft: gameSettings.drawTime,
-      phase: 'drawing',
-      revealedLetters: initialRevealed
+      phase: 'word-selection',
+      revealedLetters: [],
+      wordOptions: wordOptions
     }));
     
     setHasGuessedCorrectly(false);
     setChatMessages([]);
-    startTimer();
-    startHintTimer();
   };
 
   const getRandomWord = () => {
@@ -350,10 +371,19 @@ const Game = () => {
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center gap-2">
                   <div className="min-w-0 flex-1">
-                    {isCurrentDrawer ? (
+                    {gameState.phase === 'word-selection' && isCurrentDrawer ? (
+                      <div className="flex items-center space-x-2">
+                        <Palette className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500 flex-shrink-0" />
+                        <span className="text-sm sm:text-lg font-bold truncate">Vyberte si slovo ke kreslení:</span>
+                      </div>
+                    ) : isCurrentDrawer ? (
                       <div className="flex items-center space-x-2">
                         <Palette className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500 flex-shrink-0" />
                         <span className="text-sm sm:text-lg font-bold truncate">Kreslíte: {gameState.currentWord}</span>
+                      </div>
+                    ) : gameState.phase === 'word-selection' ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm sm:text-lg font-bold truncate">{gameState.currentDrawer} si vybírá slovo...</span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2">
@@ -368,7 +398,24 @@ const Game = () => {
                   </Badge>
                 </div>
                 
-                {!isCurrentDrawer && (
+                {gameState.phase === 'word-selection' && isCurrentDrawer && (
+                  <div className="flex justify-center">
+                    <Select onValueChange={selectWord}>
+                      <SelectTrigger className="w-full max-w-xs">
+                        <SelectValue placeholder="Vyberte slovo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gameState.wordOptions?.map((word) => (
+                          <SelectItem key={word} value={word}>
+                            {word}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                {!isCurrentDrawer && gameState.phase === 'drawing' && (
                   <div className="text-center">
                     <div className="text-lg sm:text-2xl font-mono font-bold text-purple-600 dark:text-purple-400 tracking-widest">
                       {getDisplayWord()}
@@ -381,10 +428,28 @@ const Game = () => {
               </div>
             </CardHeader>
             <CardContent className="h-[calc(100%-100px)] sm:h-[calc(100%-140px)] p-2 sm:p-6">
-              <DrawingCanvas 
-                canDraw={isCurrentDrawer}
-                className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700"
-              />
+              {gameState.phase === 'word-selection' ? (
+                <div className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    {isCurrentDrawer ? (
+                      <div>
+                        <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg">Vyberte si slovo ke kreslení</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg">Čekáme na výběr slova...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <DrawingCanvas 
+                  canDraw={isCurrentDrawer}
+                  className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700"
+                />
+              )}
             </CardContent>
           </Card>
         </div>
@@ -438,7 +503,7 @@ const Game = () => {
               <CardContent className="flex-1 flex flex-col overflow-hidden min-h-0">
                 <ChatBox messages={chatMessages} className="flex-1 overflow-hidden" />
                 
-                {!isCurrentDrawer && !hasGuessedCorrectly && (
+                {!isCurrentDrawer && !hasGuessedCorrectly && gameState.phase === 'drawing' && (
                   <div className="flex space-x-2 mt-4">
                     <Input
                       placeholder="Napište svou odpověď..."
