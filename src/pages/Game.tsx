@@ -74,7 +74,7 @@ const Game = () => {
       />
 
       <div className="flex h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)] overflow-hidden">
-        <div className={`${shouldHideSidebarOnMobile && !showMobileSidebar ? 'w-full' : 'flex-1'} p-2 sm:p-4 min-w-0`}>
+        <div className={`${shouldHideSidebarOnMobile && !showMobileSidebar ? 'w-full' : 'flex-1 max-w-[75%]'} p-1 sm:p-2 min-w-0`}>
           <GameArea
             phase={gameState.phase}
             isCurrentDrawer={isCurrentDrawer}
@@ -89,20 +89,22 @@ const Game = () => {
         </div>
 
         {(!shouldHideSidebarOnMobile || showMobileSidebar) && (
-          <GameSidebar
-            shouldHideSidebarOnMobile={shouldHideSidebarOnMobile}
-            showMobileSidebar={showMobileSidebar}
-            onToggleSidebar={() => setShowMobileSidebar(false)}
-            scores={gameState.scores}
-            currentDrawer={gameState.currentDrawer}
-            chatMessages={chatMessages}
-            isCurrentDrawer={isCurrentDrawer}
-            hasGuessedCorrectly={hasGuessedCorrectly}
-            gamePhase={gameState.phase}
-            currentGuess={currentGuess}
-            onCurrentGuessChange={setCurrentGuess}
-            onSubmitGuess={submitGuess}
-          />
+          <div className="w-80 flex-shrink-0">
+            <GameSidebar
+              shouldHideSidebarOnMobile={shouldHideSidebarOnMobile}
+              showMobileSidebar={showMobileSidebar}
+              onToggleSidebar={() => setShowMobileSidebar(false)}
+              scores={gameState.scores}
+              currentDrawer={gameState.currentDrawer}
+              chatMessages={chatMessages}
+              isCurrentDrawer={isCurrentDrawer}
+              hasGuessedCorrectly={hasGuessedCorrectly}
+              gamePhase={gameState.phase}
+              currentGuess={currentGuess}
+              onCurrentGuessChange={setCurrentGuess}
+              onSubmitGuess={submitGuess}
+            />
+          </div>
         )}
       </div>
     </div>
