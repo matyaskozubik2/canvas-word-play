@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +23,43 @@ interface ChatMessage {
   timestamp: number;
 }
 
+const EASY_WORDS = [
+  'dům', 'ryba', 'auto', 'kočka', 'pes', 'slunce', 'měsíc', 'strom', 'květina', 'pták',
+  'lampa', 'mrak', 'hory', 'kniha', 'mobil', 'tužka', 'stůl', 'židle', 'balón', 'okno',
+  'dveře', 'dort', 'jablko', 'banán', 'hruška', 'postel', 'zub', 'čepice', 'klíč', 'srdce',
+  'boty', 'ponožka', 'nos', 'ucho', 'oči', 'autobus', 'vlak', 'míč', 'hvězda',
+  'sněhulák', 'tučňák', 'trávník', 'koberec', 'motýl', 'rybník', 'deštník',
+  'sklenice', 'hrnek', 'kladivo', 'hřebík', 'koště', 'hřeben', 'rádio', 'počítač', 'myš',
+  'kolo', 'helma', 'kráva', 'prase', 'kuře', 'kachna', 'vejce', 'květák', 'mrkev', 'cibule',
+  'pizza', 'burger', 'lžíce', 'vidlička', 'nůž', 'koláč', 'dortík', 'zmrzlina', 'hranolky',
+  'lavička', 'medvěd', 'lev', 'tygr', 'žirafa', 'hroch', 'opice', 'včela', 'mravenec',
+  'raketa', 'letadlo', 'loď', 'ponorka', 'kočár', 'traktor', 'slon', 'velryba', 'klokan',
+  'list', 'růže', 'kopretina', 'vánoční stromek', 'dárky', 'sníh', 'škola',
+  'učitel', 'tabule', 'křída', 'školní taška', 'guma', 'kružítko',
+  'mikina', 'bunda', 'kalhoty', 'tričko', 'sukně', 'šála', 'rukavice', 'oblak', 'duha',
+  'zvonek', 'kolotoč', 'houpačka', 'hřiště', 'bazén', 'sprcha', 'vana', 'kartáček',
+  'pasta', 'žába', 'kůň', 'ježek', 'netopýr', 'nůžky', 'písek', 'moře',
+  'pláž', 'palma', 'kaktus', 'sopka', 'kostel', 'taxík', 'značka', 'semafor'
+];
+
+const HARD_WORDS = [
+  'mobilní aplikace', 'internet', 'nákup', 'nemocnice', 'doktor', 'letiště', 'pilot', 'ředitel', 'kněz',
+  'vysavač', 'mikrovlnka', 'dálkový ovladač', 'televize', 'kamera', 'hasič', 'policista', 'vědec',
+  'programátor', 'skladatel', 'zpěvák', 'kuchař', 'kadeřník', 'baletka', 'architekt', 'sochař', 'malíř',
+  'čarodějnice', 'rytíř', 'princezna', 'robot', 'duch', 'upír', 'zombie', 'superhrdina', 'batman',
+  'spiderman', 'dinosaurus', 'planeta', 'galaxie', 'vesmír', 'meteor', 'asteroid', 'Mars', 'Saturn',
+  'měsíc (planetární)', 'astronaut', 'skafandr', 'prstýnek', 'náramek', 'řetízek', 'zrcadlo', 'kufr',
+  'kabelka', 'batoh', 'CD', 'gramofon', 'flétna', 'buben', 'housle', 'kytara',
+  'piáno', 'trumpetka', 'saxofon', 'fotografie', 'noviny', 'časopis', 'pohádka',
+  'komiks', 'tablet', 'powerbanka', 'čtečka', 'cloud', 'e-mail', 'síť', 'přihlášení', 'heslo', 'wi-fi',
+  'volání', 'zpráva', 'video', 'stream', 'youtuber', 'influencer', 'streamer', 'moderátor', 'komentář',
+  'lajk', 'sdílení', 'sledování', 'mapa', 'kompas', 'GPS', 'satelit', 'radar', 'počasí', 'bouřka',
+  'baterka', 'svítilna', 'sirka', 'zapalovač', 'svíčka', 'stín', 'odraz', 'kouř', 'oheň', 'lavina',
+  'záplava', 'tornádo', 'vítr', 'teplota', 'zima', 'vedro', 'jaro', 'léto', 'podzim', 'školní výlet',
+  'prázdniny', 'dovolená', 'výstava', 'muzeum', 'galerie', 'stadion', 'koncert', 'divadlo', 'cirkus',
+  'závod', 'maraton', 'olympiáda', 'skok do dálky', 'běh', 'plavání', 'šachy', 'karty', 'domino', 'puzzle'
+];
+
 export const useGameLogic = (players: any[], gameSettings: any, playerName: string) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -48,13 +84,9 @@ export const useGameLogic = (players: any[], gameSettings: any, playerName: stri
   const hintTimerRef = useRef<NodeJS.Timeout>();
 
   const generateWordOptions = () => {
-    const words = [
-      'KOČKA', 'DŮM', 'AUTO', 'STROM', 'SLUNCE', 'KNIHA', 'TELEFON', 'KVĚTINA',
-      'HRAD', 'LETADLO', 'RYBA', 'HORA', 'ČOKOLÁDA', 'KLAVÍR', 'MOTÝL', 'ZÁMEK',
-      'MÍČEK', 'OKNO', 'ŽIDLE', 'KOŠILE', 'JABLKO', 'KOLO', 'PIZZA', 'KLOBOUK'
-    ];
-    
-    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    // Combine both arrays and shuffle
+    const allWords = [...EASY_WORDS, ...HARD_WORDS];
+    const shuffled = [...allWords].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
   };
 
