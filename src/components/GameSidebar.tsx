@@ -45,10 +45,8 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
   onCurrentGuessChange,
   onSubmitGuess
 }) => {
-  if (!shouldHideSidebarOnMobile && !showMobileSidebar) return null;
-
   return (
-    <div className={`w-80 max-w-[90vw] p-2 sm:p-4 space-y-4 overflow-hidden ${shouldHideSidebarOnMobile ? 'absolute right-0 top-0 h-full bg-white dark:bg-gray-900 z-50 shadow-xl' : ''}`}>
+    <div className="w-full h-full p-2 sm:p-4 space-y-4 overflow-hidden">
       {shouldHideSidebarOnMobile && showMobileSidebar && (
         <div className="flex justify-end mb-4 pt-4">
           <Button
@@ -61,7 +59,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
         </div>
       )}
 
-      {/* Scores */}
+      {/* Scores - positioned above chat */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center space-x-2 text-base">
@@ -86,7 +84,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
         </CardContent>
       </Card>
 
-      {/* Chat */}
+      {/* Chat - positioned below scores */}
       <Card className="flex-1 flex flex-col overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Chat</CardTitle>
