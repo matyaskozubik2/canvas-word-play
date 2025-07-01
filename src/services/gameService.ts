@@ -7,23 +7,29 @@ export const gameService = {
   async createGame(hostName: string, settings: any): Promise<{ game: Game; player: Player }> {
     const roomCode = await this.generateRoomCode();
     
-    // First create player to get the actual host ID
-    const tempGame = {
-      room_code: roomCode,
-      host_id: crypto.randomUUID(), // Generate temporary UUID
-      total_rounds: settings.rounds,
-      draw_time: settings.drawTime,
-      max_players: settings.maxPlayers
-    };
-
+    console.log('Creating game with room code:', roomCode);
+    
+    // First create the game
     const { data: game, error: gameError } = await supabase
       .from('games')
-      .insert(tempGame)
+      .insert({
+        room_code: roomCode,
+        host_id: '', // Will be updated after player creation
+        total_rounds: settings.rounds,
+        draw_time: settings.drawTime,
+        max_players: settings.maxPlayers
+      })
       .select()
       .single();
 
-    if (gameError) throw gameError;
+    if (gameError) {
+      console.error('Error creating game:', gameError);
+      throw gameError;
+    }
 
+    console.log('Game created:', game);
+
+    // Then create the host player
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
@@ -35,7 +41,12 @@ export const gameService = {
       .select()
       .single();
 
-    if (playerError) throw playerError;
+    if (playerError) {
+      console.error('Error creating player:', playerError);
+      throw playerError;
+    }
+
+    console.log('Player created:', player);
 
     // Update game with actual host_id
     const { data: updatedGame, error: updateError } = await supabase
@@ -45,26 +56,52 @@ export const gameService = {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Error updating game host:', updateError);
+      throw updateError;
+    }
+
+    console.log('Game updated with host:', updatedGame);
 
     return { game: updatedGame, player };
   },
 
   async joinGame(roomCode: string, playerName: string): Promise<{ game: Game; player: Player }> {
+    console.log('Attempting to join game with room code:', roomCode);
+    
+    // First check if the game exists
     const { data: game, error: gameError } = await supabase
       .from('games')
       .select('*')
       .eq('room_code', roomCode.toUpperCase())
-      .single();
+      .maybeSingle();
 
-    if (gameError) throw gameError;
+    if (gameError) {
+      console.error('Error fetching game:', gameError);
+      throw gameError;
+    }
+
+    if (!game) {
+      console.error('Game not found with room code:', roomCode);
+      throw new Error('Místnost s tímto kódem neexistuje');
+    }
+
+    console.log('Game found:', game);
 
     // Check if game is full
     const players = await this.getGamePlayers(game.id);
+    console.log('Current players:', players);
+    
     if (players.length >= game.max_players) {
       throw new Error('Hra je plná');
     }
 
+    // Check if game is still in waiting phase
+    if (game.phase !== 'waiting') {
+      throw new Error('Hra již začala');
+    }
+
+    // Create new player
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
@@ -76,19 +113,31 @@ export const gameService = {
       .select()
       .single();
 
-    if (playerError) throw playerError;
+    if (playerError) {
+      console.error('Error creating player:', playerError);
+      throw playerError;
+    }
+
+    console.log('Player joined:', player);
 
     return { game, player };
   },
 
   async getGameByRoomCode(roomCode: string): Promise<Game | null> {
+    console.log('Checking if room exists:', roomCode);
+    
     const { data, error } = await supabase
       .from('games')
       .select('*')
       .eq('room_code', roomCode.toUpperCase())
-      .single();
+      .maybeSingle();
 
-    if (error) return null;
+    if (error) {
+      console.error('Error checking room:', error);
+      return null;
+    }
+    
+    console.log('Room check result:', data);
     return data;
   },
 
@@ -99,7 +148,11 @@ export const gameService = {
       .eq('game_id', gameId)
       .order('joined_at', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching players:', error);
+      throw error;
+    }
+    
     return data || [];
   },
 
@@ -116,7 +169,7 @@ export const gameService = {
     const players = await this.getGamePlayers(gameId);
     const firstDrawer = players.find(p => p.is_host) || players[0];
     
-    const { data: game, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from('games')
       .update({
         phase: 'word-selection',
@@ -124,9 +177,7 @@ export const gameService = {
         word_options: this.generateWordOptions(),
         time_left: 30
       })
-      .eq('id', gameId)
-      .select()
-      .single();
+      .eq('id', gameId);
 
     if (updateError) throw updateError;
   },
@@ -173,7 +224,7 @@ export const gameService = {
             .from('players')
             .update({ 
               has_guessed_correctly: true,
-              score: supabase.raw('score + 10') // Add points for correct guess
+              score: supabase.sql`score + 10` // Fixed: use supabase.sql instead of supabase.raw
             })
             .eq('id', playerId);
         }

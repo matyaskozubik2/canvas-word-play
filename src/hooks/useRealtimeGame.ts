@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Game, Player, ChatMessage } from '@/types/game';
@@ -115,7 +116,7 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
       )
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
-        if (status === 'SUBSCRIPTION_ERROR') {
+        if (status === 'SUBSCRIPTION_ERROR' || status === 'CHANNEL_ERROR') {
           console.error('Realtime subscription error');
           setError('Chyba real-time připojení');
         }
