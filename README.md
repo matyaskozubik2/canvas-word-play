@@ -101,10 +101,7 @@ src/
 
 ## 🌍 Jazyková podpora
 
-- 🇨🇿 Čeština (výchozí)
-- 🇺🇸 Angličtina
-- 🇩🇪 Němčina
-- 🇫🇷 Francouzština
+- 🇨🇿 Čeština
 
 ## 📱 Mobilní podpora
 
@@ -162,23 +159,10 @@ Komponenty jsou organizovány podle atomic design principů:
 - [ ] Redis cache
 - [ ] Docker kontejnerizace
 
-## 🤝 Přispívání
-
-Příspěvky jsou vítány! Prosím:
-
-1. Forkněte projekt
-2. Vytvořte feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commitněte změny (`git commit -m 'Add some AmazingFeature'`)
-4. Pushněte do branch (`git push origin feature/AmazingFeature`)
-5. Otevřete Pull Request
 
 ## 📄 Licence
 
 Tento projekt je licencován pod MIT licencí - detaily viz [LICENSE](LICENSE) soubor.
-
-## 👥 Autoři
-
-- **Váš tým** - *Počáteční práce* - [GitHub](https://github.com/your-username)
 
 ## 🙏 Poděkování
 
@@ -190,9 +174,7 @@ Tento projekt je licencován pod MIT licencí - detaily viz [LICENSE](LICENSE) s
 ## 📞 Podpora
 
 Pokud máte problémy nebo otázky:
-- Otevřete [issue](https://github.com/your-username/drawguess/issues)
-- Pošlete email na support@drawguess.com
-- Navštivte naši [Discord komunitu](https://discord.gg/drawguess)
+- Pošlete email na matyaskozubik2@icloud.com
 
 ---
 
