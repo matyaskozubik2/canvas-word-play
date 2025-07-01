@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Game, Player, ChatMessage } from '@/types/game';
@@ -10,24 +9,40 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
   const [players, setPlayers] = useState<Player[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Load initial data
   const loadGameData = useCallback(async () => {
-    if (!gameId) return;
+    if (!gameId) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      console.log('Loading game data for gameId:', gameId);
+      
       const [gameData, playersData, messagesData] = await Promise.all([
         supabase.from('games').select('*').eq('id', gameId).single(),
         gameService.getGamePlayers(gameId),
         gameService.getChatMessages(gameId)
       ]);
 
+      console.log('Game data loaded:', { gameData, playersData, messagesData });
+
+      if (gameData.error) {
+        console.error('Game data error:', gameData.error);
+        setError('Nepodařilo se načíst data hry');
+        return;
+      }
+
       if (gameData.data) setGame(gameData.data);
       setPlayers(playersData);
       setChatMessages(messagesData);
+      setError(null);
     } catch (error) {
       console.error('Error loading game data:', error);
+      setError('Nepodařilo se připojit ke hře');
       toast({
         title: 'Chyba',
         description: 'Nepodařilo se načíst data hry',
@@ -41,12 +56,16 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
   useEffect(() => {
     if (gameId) {
       loadGameData();
+    } else {
+      setLoading(false);
     }
   }, [gameId, loadGameData]);
 
   // Set up real-time subscriptions
   useEffect(() => {
     if (!gameId) return;
+
+    console.log('Setting up realtime subscriptions for game:', gameId);
 
     const gameChannel = supabase
       .channel(`game-${gameId}`)
@@ -75,7 +94,8 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
         },
         (payload) => {
           console.log('Players update:', payload);
-          loadGameData(); // Reload all data for simplicity
+          // Reload players data to keep it in sync
+          gameService.getGamePlayers(gameId).then(setPlayers).catch(console.error);
         }
       )
       .on(
@@ -93,12 +113,19 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+        if (status === 'SUBSCRIPTION_ERROR') {
+          console.error('Realtime subscription error');
+          setError('Chyba real-time připojení');
+        }
+      });
 
     return () => {
+      console.log('Cleaning up realtime subscriptions');
       supabase.removeChannel(gameChannel);
     };
-  }, [gameId, loadGameData]);
+  }, [gameId]);
 
   // Game actions
   const updatePlayerReady = useCallback(async (isReady: boolean) => {
@@ -166,6 +193,7 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
     players,
     chatMessages,
     loading,
+    error,
     updatePlayerReady,
     startGame,
     selectWord,

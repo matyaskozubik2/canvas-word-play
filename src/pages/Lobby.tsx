@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle } from 'lucide-react';
+import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +27,9 @@ const Lobby = () => {
     maxPlayers: 8
   });
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
-  const { game, players, updatePlayerReady, startGame: startRealtimeGame } = useRealtimeGame(
+  const { game, players, error: realtimeError, updatePlayerReady, startGame: startRealtimeGame } = useRealtimeGame(
     gameData?.game.id || null,
     gameData?.player.id || null
   );
@@ -41,27 +42,37 @@ const Lobby = () => {
 
     const initializeGame = async () => {
       try {
+        setInitError(null);
+        console.log('Initializing game with:', { playerName, isHost, initialRoomCode, isRandomGame });
+        
         if (isHost) {
           // Create new game
+          console.log('Creating new game...');
           const result = await gameService.createGame(playerName, gameSettings);
+          console.log('Game created:', result);
           setGameData(result);
         } else if (initialRoomCode) {
           // Join existing game
+          console.log('Joining existing game with code:', initialRoomCode);
           const result = await gameService.joinGame(initialRoomCode, playerName);
+          console.log('Joined game:', result);
           setGameData(result);
         } else if (isRandomGame) {
           // For random games, create a new game for now
+          console.log('Creating random game...');
           const result = await gameService.createGame(playerName, gameSettings);
+          console.log('Random game created:', result);
           setGameData(result);
         }
       } catch (error) {
         console.error('Error initializing game:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Nepodařilo se připojit ke hře';
+        setInitError(errorMessage);
         toast({
           title: 'Chyba',
-          description: 'Nepodařilo se připojit ke hře',
+          description: errorMessage,
           variant: 'destructive'
         });
-        navigate('/');
       } finally {
         setLoading(false);
       }
@@ -121,12 +132,56 @@ const Lobby = () => {
     });
   };
 
-  if (loading || !gameData || !game) {
+  const handleRetry = () => {
+    setLoading(true);
+    setInitError(null);
+    window.location.reload();
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400">Načítání hry...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (initError || realtimeError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Chyba připojení</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {initError || realtimeError}
+            </p>
+            <div className="space-y-2">
+              <Button onClick={handleRetry} className="w-full">
+                Zkusit znovu
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/')}
+                className="w-full"
+              >
+                Zpět na hlavní stránku
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!gameData || !game) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600 dark:text-gray-400">Čekání na data hry...</p>
         </div>
       </div>
     );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle, Dices } from 'lucide-react';
@@ -11,6 +12,7 @@ const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -35,7 +37,7 @@ const Index = () => {
     setPlayerName(result);
   };
 
-  const createRoom = () => {
+  const createRoom = async () => {
     if (!playerName.trim()) {
       toast({
         title: "Chyba",
@@ -44,7 +46,21 @@ const Index = () => {
       });
       return;
     }
-    navigate('/lobby', { state: { playerName, isHost: true } });
+
+    setLoading(true);
+    try {
+      console.log('Creating room with player name:', playerName);
+      navigate('/lobby', { state: { playerName, isHost: true } });
+    } catch (error) {
+      console.error('Error navigating to lobby:', error);
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se vytvořit místnost",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const joinRoom = async () => {
@@ -57,7 +73,9 @@ const Index = () => {
       return;
     }
 
+    setLoading(true);
     try {
+      console.log('Checking if room exists:', roomCode);
       // Check if room exists
       const game = await gameService.getGameByRoomCode(roomCode);
       if (!game) {
@@ -69,17 +87,21 @@ const Index = () => {
         return;
       }
 
+      console.log('Room found, navigating to lobby');
       navigate('/lobby', { state: { playerName, roomCode, isHost: false } });
     } catch (error) {
+      console.error('Error joining room:', error);
       toast({
         title: "Chyba",
         description: "Nepodařilo se připojit k místnosti",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const joinRandomGame = () => {
+  const joinRandomGame = async () => {
     if (!playerName.trim()) {
       toast({
         title: "Chyba",
@@ -89,13 +111,18 @@ const Index = () => {
       return;
     }
     
-    // For now, create a new game for random games
-    toast({
-      title: "Vytváření hry...",
-      description: "Vytváříme pro vás novou hru",
-    });
+    setLoading(true);
+    try {
+      console.log('Creating random game for player:', playerName);
+      
+      toast({
+        title: "Vytváření hry...",
+        description: "Vytváříme pro vás novou hru",
+      });
 
-    setTimeout(() => {
+      // Small delay for UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       navigate('/lobby', { 
         state: { 
           playerName, 
@@ -103,7 +130,16 @@ const Index = () => {
           isRandomGame: true 
         } 
       });
-    }, 1000);
+    } catch (error) {
+      console.error('Error creating random game:', error);
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se vytvořit náhodnou hru",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -160,12 +196,14 @@ const Index = () => {
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   className="rounded-xl border-2 focus:border-purple-500 transition-colors flex-1"
+                  disabled={loading}
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={generateRandomName}
                   className="rounded-xl flex-shrink-0"
+                  disabled={loading}
                 >
                   <Dices className="w-4 h-4" />
                 </Button>
@@ -173,9 +211,10 @@ const Index = () => {
               <Button 
                 onClick={createRoom}
                 className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
+                disabled={loading}
               >
                 <Gamepad2 className="w-5 h-5 mr-2" />
-                Vytvořit hru
+                {loading ? 'Vytváří se...' : 'Vytvořit hru'}
               </Button>
             </CardContent>
           </Card>
@@ -197,12 +236,14 @@ const Index = () => {
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   className="rounded-xl border-2 focus:border-green-500 transition-colors flex-1"
+                  disabled={loading}
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={generateRandomName}
                   className="rounded-xl flex-shrink-0"
+                  disabled={loading}
                 >
                   <Dices className="w-4 h-4" />
                 </Button>
@@ -210,9 +251,10 @@ const Index = () => {
               <Button 
                 onClick={joinRandomGame}
                 className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
+                disabled={loading}
               >
                 <Shuffle className="w-5 h-5 mr-2" />
-                Najít hru
+                {loading ? 'Vytváří se...' : 'Najít hru'}
               </Button>
             </CardContent>
           </Card>
@@ -234,12 +276,14 @@ const Index = () => {
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1"
+                  disabled={loading}
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={generateRandomName}
                   className="rounded-xl flex-shrink-0"
+                  disabled={loading}
                 >
                   <Dices className="w-4 h-4" />
                 </Button>
@@ -249,13 +293,15 @@ const Index = () => {
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 className="rounded-xl border-2 focus:border-blue-500 transition-colors"
+                disabled={loading}
               />
               <Button 
                 onClick={joinRoom}
                 variant="outline"
                 className="w-full rounded-xl h-12 text-lg font-semibold border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 hover:scale-105"
+                disabled={loading}
               >
-                Připojit se ke hře
+                {loading ? 'Připojuje se...' : 'Připojit se ke hře'}
               </Button>
             </CardContent>
           </Card>
