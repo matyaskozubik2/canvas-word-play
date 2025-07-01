@@ -1,32 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GameHeader } from '@/components/GameHeader';
 import { GameArea } from '@/components/GameArea';
 import { GameSidebar } from '@/components/GameSidebar';
-import { useGameLogic } from '@/hooks/useGameLogic';
+import { useRealtimeGame } from '@/hooks/useRealtimeGame';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Game = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { players, gameSettings, roomCode, playerName } = location.state || {};
+  const { gameId, playerId, playerName } = location.state || {};
 
   const {
-    gameState,
+    game,
+    players,
     chatMessages,
-    currentGuess,
-    setCurrentGuess,
-    hasGuessedCorrectly,
+    loading,
     selectWord,
-    getDisplayWord,
-    submitGuess
-  } = useGameLogic(players, gameSettings, playerName);
+    sendMessage
+  } = useRealtimeGame(gameId, playerId);
 
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentGuess, setCurrentGuess] = useState('');
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -55,16 +55,73 @@ const Game = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const isCurrentDrawer = gameState.currentDrawer === playerName;
+  useEffect(() => {
+    if (!gameId || !playerId || !playerName) {
+      navigate('/');
+      return;
+    }
+  }, [gameId, playerId, playerName, navigate]);
+
+  const submitGuess = async () => {
+    if (!currentGuess.trim() || !game) return;
+
+    const currentPlayer = players.find(p => p.id === playerId);
+    if (!currentPlayer || currentPlayer.has_guessed_correctly) return;
+
+    await sendMessage(currentGuess, true);
+    setCurrentGuess('');
+  };
+
+  const getDisplayWord = () => {
+    if (!game?.current_word) return '';
+    
+    // For now, show the word partially revealed
+    return game.current_word
+      .split('')
+      .map((letter, index) => {
+        if (letter === ' ') return ' ';
+        return Math.random() > 0.5 ? letter : '_';
+      })
+      .join(' ');
+  };
+
+  if (loading || !game) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600 dark:text-gray-400">Načítání hry...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentPlayer = players.find(p => p.id === playerId);
+  const currentDrawer = players.find(p => p.id === game.current_drawer_id);
+  const isCurrentDrawer = game.current_drawer_id === playerId;
+
+  const gameState = {
+    currentRound: game.current_round,
+    totalRounds: game.total_rounds,
+    currentDrawer: currentDrawer?.name || '',
+    currentWord: game.current_word || '',
+    timeLeft: game.time_left,
+    phase: game.phase,
+    scores: players.reduce((acc, player) => {
+      acc[player.name] = player.score;
+      return acc;
+    }, {} as { [key: string]: number }),
+    wordOptions: game.word_options
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 overflow-hidden">
       <GameHeader
-        roomCode={roomCode}
+        roomCode={game.room_code}
         currentRound={gameState.currentRound}
         totalRounds={gameState.totalRounds}
         timeLeft={gameState.timeLeft}
-        totalTime={gameSettings?.drawTime || 80}
+        totalTime={game.draw_time}
         currentDrawer={gameState.currentDrawer}
         shouldHideSidebarOnMobile={false}
         showMobileSidebar={showMobileSidebar}
@@ -81,9 +138,16 @@ const Game = () => {
             onToggleSidebar={() => setShowMobileSidebar(false)}
             scores={gameState.scores}
             currentDrawer={gameState.currentDrawer}
-            chatMessages={chatMessages}
+            chatMessages={chatMessages.map(msg => ({
+              id: msg.id,
+              player: msg.player_name,
+              message: msg.message,
+              isGuess: msg.is_guess,
+              isCorrect: msg.is_correct,
+              timestamp: new Date(msg.created_at).getTime()
+            }))}
             isCurrentDrawer={isCurrentDrawer}
-            hasGuessedCorrectly={hasGuessedCorrectly}
+            hasGuessedCorrectly={currentPlayer?.has_guessed_correctly || false}
             gamePhase={gameState.phase}
             currentGuess={currentGuess}
             onCurrentGuessChange={setCurrentGuess}
@@ -99,7 +163,7 @@ const Game = () => {
             currentDrawer={gameState.currentDrawer}
             currentWord={gameState.currentWord}
             timeLeft={gameState.timeLeft}
-            wordOptions={gameState.wordOptions}
+            wordOptions={gameState.wordOptions || []}
             displayWord={getDisplayWord()}
             wordLength={gameState.currentWord.length}
             onSelectWord={selectWord}

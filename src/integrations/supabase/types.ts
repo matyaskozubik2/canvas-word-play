@@ -9,16 +9,193 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          game_id: string | null
+          id: string
+          is_correct: boolean | null
+          is_guess: boolean | null
+          message: string
+          player_id: string | null
+          player_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          is_correct?: boolean | null
+          is_guess?: boolean | null
+          message: string
+          player_id?: string | null
+          player_name: string
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          is_correct?: boolean | null
+          is_guess?: boolean | null
+          message?: string
+          player_id?: string | null
+          player_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawing_strokes: {
+        Row: {
+          created_at: string | null
+          game_id: string | null
+          id: string
+          round_number: number
+          stroke_data: Json
+        }
+        Insert: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          round_number: number
+          stroke_data: Json
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string | null
+          id?: string
+          round_number?: number
+          stroke_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_strokes_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          created_at: string | null
+          current_drawer_id: string | null
+          current_round: number | null
+          current_word: string | null
+          draw_time: number | null
+          host_id: string
+          id: string
+          max_players: number | null
+          phase: Database["public"]["Enums"]["game_phase"] | null
+          room_code: string
+          time_left: number | null
+          total_rounds: number | null
+          updated_at: string | null
+          word_options: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_drawer_id?: string | null
+          current_round?: number | null
+          current_word?: string | null
+          draw_time?: number | null
+          host_id: string
+          id?: string
+          max_players?: number | null
+          phase?: Database["public"]["Enums"]["game_phase"] | null
+          room_code: string
+          time_left?: number | null
+          total_rounds?: number | null
+          updated_at?: string | null
+          word_options?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          current_drawer_id?: string | null
+          current_round?: number | null
+          current_word?: string | null
+          draw_time?: number | null
+          host_id?: string
+          id?: string
+          max_players?: number | null
+          phase?: Database["public"]["Enums"]["game_phase"] | null
+          room_code?: string
+          time_left?: number | null
+          total_rounds?: number | null
+          updated_at?: string | null
+          word_options?: string[] | null
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          avatar_color: string | null
+          game_id: string | null
+          has_guessed_correctly: boolean | null
+          id: string
+          is_host: boolean | null
+          is_ready: boolean | null
+          joined_at: string | null
+          name: string
+          score: number | null
+        }
+        Insert: {
+          avatar_color?: string | null
+          game_id?: string | null
+          has_guessed_correctly?: boolean | null
+          id?: string
+          is_host?: boolean | null
+          is_ready?: boolean | null
+          joined_at?: string | null
+          name: string
+          score?: number | null
+        }
+        Update: {
+          avatar_color?: string | null
+          game_id?: string | null
+          has_guessed_correctly?: boolean | null
+          id?: string
+          is_host?: boolean | null
+          is_ready?: boolean | null
+          joined_at?: string | null
+          name?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_room_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      game_phase: "waiting" | "word-selection" | "drawing" | "results"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +310,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      game_phase: ["waiting", "word-selection", "drawing", "results"],
+    },
   },
 } as const

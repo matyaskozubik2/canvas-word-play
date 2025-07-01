@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle, Dices } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { gameService } from '@/services/gameService';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -47,7 +47,7 @@ const Index = () => {
     navigate('/lobby', { state: { playerName, isHost: true } });
   };
 
-  const joinRoom = () => {
+  const joinRoom = async () => {
     if (!playerName.trim() || !roomCode.trim()) {
       toast({
         title: "Chyba",
@@ -56,7 +56,27 @@ const Index = () => {
       });
       return;
     }
-    navigate('/lobby', { state: { playerName, roomCode, isHost: false } });
+
+    try {
+      // Check if room exists
+      const game = await gameService.getGameByRoomCode(roomCode);
+      if (!game) {
+        toast({
+          title: "Chyba",
+          description: "Místnost s tímto kódem neexistuje",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      navigate('/lobby', { state: { playerName, roomCode, isHost: false } });
+    } catch (error) {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se připojit k místnosti",
+        variant: "destructive"
+      });
+    }
   };
 
   const joinRandomGame = () => {
@@ -69,24 +89,21 @@ const Index = () => {
       return;
     }
     
-    // Simulate finding a random game
+    // For now, create a new game for random games
     toast({
-      title: "Hledám hru...",
-      description: "Připojuji vás k náhodné hře s jinými hráči",
+      title: "Vytváření hry...",
+      description: "Vytváříme pro vás novou hru",
     });
 
-    // Simulate delay for finding a game
     setTimeout(() => {
-      const randomRoomCode = Math.random().toString(36).substr(2, 6).toUpperCase();
       navigate('/lobby', { 
         state: { 
           playerName, 
-          roomCode: randomRoomCode, 
-          isHost: false,
+          isHost: true,
           isRandomGame: true 
         } 
       });
-    }, 1500);
+    }, 1000);
   };
 
   return (
