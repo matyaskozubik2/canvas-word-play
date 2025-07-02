@@ -8,31 +8,12 @@ export const gameService = {
     
     console.log('Creating game with room code:', roomCode);
     
-    // First create the player to get a valid UUID
-    const { data: player, error: playerError } = await supabase
-      .from('players')
-      .insert({
-        game_id: '', // Will be updated after game creation
-        name: hostName,
-        is_host: true,
-        avatar_color: this.generateAvatarColor(hostName)
-      })
-      .select()
-      .single();
-
-    if (playerError) {
-      console.error('Error creating player:', playerError);
-      throw playerError;
-    }
-
-    console.log('Player created:', player);
-
-    // Now create the game with the actual player ID
+    // First create the game
     const { data: game, error: gameError } = await supabase
       .from('games')
       .insert({
         room_code: roomCode,
-        host_id: player.id,
+        host_id: '00000000-0000-0000-0000-000000000000', // Temporary host_id
         total_rounds: settings.rounds,
         draw_time: settings.drawTime,
         max_players: settings.maxPlayers
@@ -42,29 +23,48 @@ export const gameService = {
 
     if (gameError) {
       console.error('Error creating game:', gameError);
-      // Clean up player if game creation failed
-      await supabase.from('players').delete().eq('id', player.id);
       throw gameError;
     }
 
     console.log('Game created:', game);
 
-    // Update player with correct game_id
-    const { data: updatedPlayer, error: updatePlayerError } = await supabase
+    // Now create the player with the actual game ID
+    const { data: player, error: playerError } = await supabase
       .from('players')
-      .update({ game_id: game.id })
-      .eq('id', player.id)
+      .insert({
+        game_id: game.id,
+        name: hostName,
+        is_host: true,
+        avatar_color: this.generateAvatarColor(hostName)
+      })
       .select()
       .single();
 
-    if (updatePlayerError) {
-      console.error('Error updating player game_id:', updatePlayerError);
-      throw updatePlayerError;
+    if (playerError) {
+      console.error('Error creating player:', playerError);
+      // Clean up game if player creation failed
+      await supabase.from('games').delete().eq('id', game.id);
+      throw playerError;
     }
 
-    console.log('Player updated with game_id:', updatedPlayer);
+    console.log('Player created:', player);
 
-    return { game, player: updatedPlayer };
+    // Update game with correct host_id
+    const { data: updatedGame, error: updateGameError } = await supabase
+      .from('games')
+      .update({ host_id: player.id })
+      .eq('id', game.id)
+      .select()
+      .single();
+
+    if (updateGameError) {
+      console.error('Error updating game host_id:', updateGameError);
+      throw updateGameError;
+    }
+
+    console.log('Game updated with host_id:', updatedGame);
+
+    return { game: updatedGame, player };
   },
 
   async joinGame(roomCode: string, playerName: string): Promise<{ game: Game; player: Player }> {
