@@ -219,14 +219,27 @@ export const gameService = {
         isCorrect = message.toLowerCase().trim() === game.current_word.toLowerCase().trim();
         
         if (isCorrect) {
-          // Update player as having guessed correctly
-          await supabase
+          // Update player as having guessed correctly and add points
+          const { error: updateError } = await supabase
             .from('players')
             .update({ 
               has_guessed_correctly: true,
-              score: supabase.sql`score + 10` // Fixed: use supabase.sql instead of supabase.raw
             })
             .eq('id', playerId);
+
+          if (updateError) {
+            console.error('Error updating player guess status:', updateError);
+          }
+
+          // Add points to the player's score
+          const { error: scoreError } = await supabase.rpc('increment_player_score', {
+            player_id: playerId,
+            points: 10
+          });
+
+          if (scoreError) {
+            console.error('Error updating player score:', scoreError);
+          }
         }
       }
     }

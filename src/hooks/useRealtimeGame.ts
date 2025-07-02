@@ -116,7 +116,7 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
       )
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
-        if (status === 'SUBSCRIPTION_ERROR' || status === 'CHANNEL_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           console.error('Realtime subscription error');
           setError('Chyba real-time připojení');
         }
