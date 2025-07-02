@@ -219,7 +219,7 @@ export const gameService = {
         isCorrect = message.toLowerCase().trim() === game.current_word.toLowerCase().trim();
         
         if (isCorrect) {
-          // Update player as having guessed correctly and add points
+          // Update player as having guessed correctly
           const { error: updateError } = await supabase
             .from('players')
             .update({ 
@@ -231,11 +231,13 @@ export const gameService = {
             console.error('Error updating player guess status:', updateError);
           }
 
-          // Add points to the player's score
-          const { error: scoreError } = await supabase.rpc('increment_player_score', {
-            player_id: playerId,
-            points: 10
-          });
+          // Add points to the player's score using direct SQL update
+          const { error: scoreError } = await supabase
+            .from('players')
+            .update({
+              score: supabase.sql`COALESCE(score, 0) + 10`
+            })
+            .eq('id', playerId);
 
           if (scoreError) {
             console.error('Error updating player score:', scoreError);

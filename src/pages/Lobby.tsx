@@ -43,6 +43,7 @@ const Lobby = () => {
     const initializeGame = async () => {
       try {
         setInitError(null);
+        setLoading(true);
         console.log('Initializing game with:', { playerName, isHost, initialRoomCode, isRandomGame });
         
         if (isHost) {
@@ -63,6 +64,8 @@ const Lobby = () => {
           const result = await gameService.createGame(playerName, gameSettings);
           console.log('Random game created:', result);
           setGameData(result);
+        } else {
+          throw new Error('Chybí informace o hře');
         }
       } catch (error) {
         console.error('Error initializing game:', error);
@@ -317,7 +320,7 @@ const Lobby = () => {
                       <span>Jste hostitel místnosti</span>
                     </div>
                   ) : (
-                    'Čekáte na hostititele'
+                    'Čekáte na hostitele'
                   )}
                 </div>
               </CardContent>

@@ -193,6 +193,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      increment_player_score: {
+        Args: { player_id: string; points: number }
+        Returns: undefined
+      }
     }
     Enums: {
       game_phase: "waiting" | "word-selection" | "drawing" | "results"
