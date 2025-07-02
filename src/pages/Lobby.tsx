@@ -29,10 +29,23 @@ const Lobby = () => {
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
 
-  const { game, players, error: realtimeError, updatePlayerReady, startGame: startRealtimeGame } = useRealtimeGame(
+  const { game, players, error: realtimeError, startGame: startRealtimeGame } = useRealtimeGame(
     gameData?.game.id || null,
     gameData?.player.id || null
   );
+
+  // Auto-navigate to game when it starts
+  useEffect(() => {
+    if (game && game.phase !== 'waiting' && gameData) {
+      navigate('/game', { 
+        state: { 
+          gameId: game.id,
+          playerId: gameData.player.id,
+          playerName
+        } 
+      });
+    }
+  }, [game?.phase, gameData, navigate, playerName]);
 
   useEffect(() => {
     if (!playerName) {
@@ -102,15 +115,6 @@ const Lobby = () => {
     }
   };
 
-  const toggleReady = async () => {
-    if (!gameData) return;
-    
-    const currentPlayer = players.find(p => p.id === gameData.player.id);
-    if (!currentPlayer) return;
-
-    await updatePlayerReady(!currentPlayer.is_ready);
-  };
-
   const handleStartGame = async () => {
     if (!gameData || !game) return;
     
@@ -124,15 +128,6 @@ const Lobby = () => {
     }
 
     await startRealtimeGame();
-    
-    // Navigate to game page
-    navigate('/game', { 
-      state: { 
-        gameId: game.id,
-        playerId: gameData.player.id,
-        playerName
-      } 
-    });
   };
 
   const handleRetry = () => {
@@ -253,7 +248,7 @@ const Lobby = () => {
                   id: p.id,
                   name: p.name,
                   isHost: p.is_host,
-                  isReady: p.is_ready,
+                  isReady: true, // All players are always ready now
                   avatar: p.avatar_color
                 }))} />
               </CardContent>
@@ -285,24 +280,13 @@ const Lobby = () => {
               </Card>
             )}
 
-            {/* Ready/Start Controls */}
+            {/* Start Controls */}
             <Card>
               <CardHeader>
                 <CardTitle>Ovládání hry</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!isCurrentHost ? (
-                  <Button 
-                    onClick={toggleReady}
-                    className={`w-full h-12 rounded-xl font-semibold transition-all duration-300 ${
-                      currentPlayer?.is_ready
-                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                    }`}
-                  >
-                    {currentPlayer?.is_ready ? '✓ Připraven' : 'Připravit se'}
-                  </Button>
-                ) : (
+                {isCurrentHost ? (
                   <Button 
                     onClick={handleStartGame}
                     className="w-full h-12 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-300 hover:scale-105"
@@ -311,6 +295,15 @@ const Lobby = () => {
                     <Play className="w-5 h-5 mr-2" />
                     Začít hru
                   </Button>
+                ) : (
+                  <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <div className="text-blue-600 dark:text-blue-400 font-semibold mb-2">
+                      Připraven ke hře!
+                    </div>
+                    <div className="text-sm text-blue-500 dark:text-blue-300">
+                      Čekáte na spuštění hry hostitelem
+                    </div>
+                  </div>
                 )}
 
                 <div className="text-center text-sm text-gray-600 dark:text-gray-400">

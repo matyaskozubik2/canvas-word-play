@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Game, Player, ChatMessage } from '@/types/game';
@@ -132,20 +131,6 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
   }, [gameId]);
 
   // Game actions
-  const updatePlayerReady = useCallback(async (isReady: boolean) => {
-    if (!playerId) return;
-    try {
-      await gameService.updatePlayerReady(playerId, isReady);
-    } catch (error) {
-      console.error('Error updating ready status:', error);
-      toast({
-        title: 'Chyba',
-        description: 'Nepodařilo se aktualizovat stav připravenosti',
-        variant: 'destructive'
-      });
-    }
-  }, [playerId, toast]);
-
   const startGame = useCallback(async () => {
     if (!gameId) return;
     try {
@@ -198,7 +183,6 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
     chatMessages,
     loading,
     error,
-    updatePlayerReady,
     startGame,
     selectWord,
     sendMessage

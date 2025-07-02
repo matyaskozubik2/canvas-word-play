@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Crown, Check, Clock } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 
 interface Player {
   id: string;
@@ -38,18 +37,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({ players }) => {
               )}
             </div>
             
-            <div className="flex items-center space-x-2 mt-1">
-              {player.isReady ? (
-                <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                  <Check className="w-3 h-3 mr-1" />
-                  Připraven
-                </Badge>
-              ) : (
-                <Badge variant="secondary">
-                  <Clock className="w-3 h-3 mr-1" />
-                  Nepřipraven
-                </Badge>
-              )}
+            <div className="text-sm text-green-600 dark:text-green-400 mt-1">
+              Připraven
             </div>
           </div>
         </div>
