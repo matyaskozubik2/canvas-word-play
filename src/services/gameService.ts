@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Game, Player, ChatMessage } from '@/types/game';
 
@@ -9,31 +8,11 @@ export const gameService = {
     
     console.log('Creating game with room code:', roomCode);
     
-    // First create the game
-    const { data: game, error: gameError } = await supabase
-      .from('games')
-      .insert({
-        room_code: roomCode,
-        host_id: '', // Will be updated after player creation
-        total_rounds: settings.rounds,
-        draw_time: settings.drawTime,
-        max_players: settings.maxPlayers
-      })
-      .select()
-      .single();
-
-    if (gameError) {
-      console.error('Error creating game:', gameError);
-      throw gameError;
-    }
-
-    console.log('Game created:', game);
-
-    // Then create the host player
+    // First create the player to get a valid UUID
     const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
-        game_id: game.id,
+        game_id: '', // Will be updated after game creation
         name: hostName,
         is_host: true,
         avatar_color: this.generateAvatarColor(hostName)
@@ -48,22 +27,44 @@ export const gameService = {
 
     console.log('Player created:', player);
 
-    // Update game with actual host_id
-    const { data: updatedGame, error: updateError } = await supabase
+    // Now create the game with the actual player ID
+    const { data: game, error: gameError } = await supabase
       .from('games')
-      .update({ host_id: player.id })
-      .eq('id', game.id)
+      .insert({
+        room_code: roomCode,
+        host_id: player.id,
+        total_rounds: settings.rounds,
+        draw_time: settings.drawTime,
+        max_players: settings.maxPlayers
+      })
       .select()
       .single();
 
-    if (updateError) {
-      console.error('Error updating game host:', updateError);
-      throw updateError;
+    if (gameError) {
+      console.error('Error creating game:', gameError);
+      // Clean up player if game creation failed
+      await supabase.from('players').delete().eq('id', player.id);
+      throw gameError;
     }
 
-    console.log('Game updated with host:', updatedGame);
+    console.log('Game created:', game);
 
-    return { game: updatedGame, player };
+    // Update player with correct game_id
+    const { data: updatedPlayer, error: updatePlayerError } = await supabase
+      .from('players')
+      .update({ game_id: game.id })
+      .eq('id', player.id)
+      .select()
+      .single();
+
+    if (updatePlayerError) {
+      console.error('Error updating player game_id:', updatePlayerError);
+      throw updatePlayerError;
+    }
+
+    console.log('Player updated with game_id:', updatedPlayer);
+
+    return { game, player: updatedPlayer };
   },
 
   async joinGame(roomCode: string, playerName: string): Promise<{ game: Game; player: Player }> {
@@ -231,13 +232,11 @@ export const gameService = {
             console.error('Error updating player guess status:', updateError);
           }
 
-          // Add points to the player's score using direct SQL update
-          const { error: scoreError } = await supabase
-            .from('players')
-            .update({
-              score: supabase.sql`COALESCE(score, 0) + 10`
-            })
-            .eq('id', playerId);
+          // Add points to the player's score using RPC function
+          const { error: scoreError } = await supabase.rpc('increment_player_score', {
+            player_id: playerId,
+            points: 10
+          });
 
           if (scoreError) {
             console.error('Error updating player score:', scoreError);
