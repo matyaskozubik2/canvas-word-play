@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, Users, Palette, Gamepad2, Settings, Shuffle, Dices } from 'lucide-react';
@@ -7,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { gameService } from '@/services/gameService';
+import { OGImageGenerator } from '@/components/OGImageGenerator';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -339,6 +339,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* OG Image Generator - only visible in development */}
+      {process.env.NODE_ENV === 'development' && <OGImageGenerator />}
     </div>
   );
 };
