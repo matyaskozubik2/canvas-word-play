@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Palette } from 'lucide-react';
 
@@ -103,10 +102,13 @@ export const OGImageGenerator: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50">
       <button
         onClick={downloadOGImage}
-        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2"
+        className="group bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg shadow-lg flex items-center transition-all duration-300 hover:px-4"
+        title="Stáhnout OG obrázek"
       >
         <Palette className="w-4 h-4" />
-        <span>Stáhnout OG obrázek</span>
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 transition-all duration-300">
+          Stáhnout OG obrázek
+        </span>
       </button>
     </div>
   );
