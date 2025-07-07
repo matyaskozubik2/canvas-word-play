@@ -7,27 +7,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { gameService } from '@/services/gameService';
 import { OGImageGenerator } from '@/components/OGImageGenerator';
-
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     // Check system preference for dark mode
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setDarkMode(isDark);
     if (isDark) document.documentElement.classList.add('dark');
   }, []);
-
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
   };
-
   const generateRandomName = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -36,7 +34,6 @@ const Index = () => {
     }
     setPlayerName(result);
   };
-
   const createRoom = async () => {
     if (!playerName.trim()) {
       toast({
@@ -46,11 +43,15 @@ const Index = () => {
       });
       return;
     }
-
     setLoading(true);
     try {
       console.log('Creating room with player name:', playerName);
-      navigate('/lobby', { state: { playerName, isHost: true } });
+      navigate('/lobby', {
+        state: {
+          playerName,
+          isHost: true
+        }
+      });
     } catch (error) {
       console.error('Error navigating to lobby:', error);
       toast({
@@ -62,7 +63,6 @@ const Index = () => {
       setLoading(false);
     }
   };
-
   const joinRoom = async () => {
     if (!playerName.trim() || !roomCode.trim()) {
       toast({
@@ -72,7 +72,6 @@ const Index = () => {
       });
       return;
     }
-
     setLoading(true);
     try {
       console.log('Checking if room exists:', roomCode);
@@ -86,9 +85,14 @@ const Index = () => {
         });
         return;
       }
-
       console.log('Room found, navigating to lobby');
-      navigate('/lobby', { state: { playerName, roomCode, isHost: false } });
+      navigate('/lobby', {
+        state: {
+          playerName,
+          roomCode,
+          isHost: false
+        }
+      });
     } catch (error) {
       console.error('Error joining room:', error);
       toast({
@@ -100,7 +104,6 @@ const Index = () => {
       setLoading(false);
     }
   };
-
   const joinRandomGame = async () => {
     if (!playerName.trim()) {
       toast({
@@ -110,25 +113,22 @@ const Index = () => {
       });
       return;
     }
-    
     setLoading(true);
     try {
       console.log('Creating random game for player:', playerName);
-      
       toast({
         title: "Vytváření hry...",
-        description: "Vytváříme pro vás novou hru",
+        description: "Vytváříme pro vás novou hru"
       });
 
       // Small delay for UX
       await new Promise(resolve => setTimeout(resolve, 1000));
-
-      navigate('/lobby', { 
-        state: { 
-          playerName, 
+      navigate('/lobby', {
+        state: {
+          playerName,
           isHost: true,
-          isRandomGame: true 
-        } 
+          isRandomGame: true
+        }
       });
     } catch (error) {
       console.error('Error creating random game:', error);
@@ -141,9 +141,7 @@ const Index = () => {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 transition-all duration-500">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 transition-all duration-500">
       {/* Header */}
       <header className="p-6 flex justify-between items-center">
         <div className="flex items-center space-x-3">
@@ -155,12 +153,7 @@ const Index = () => {
           </h1>
         </div>
         
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleDarkMode}
-          className="rounded-full hover:scale-105 transition-transform"
-        >
+        <Button variant="outline" size="icon" onClick={toggleDarkMode} className="rounded-full hover:scale-105 transition-transform">
           {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </Button>
       </header>
@@ -169,9 +162,7 @@ const Index = () => {
       <div className="container mx-auto px-6 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-              Kreslíte. Hádáte. Bavíte se.
-            </span>
+            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">Kreslete. Hádejte. Bavte se.</span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Moderní multiplayerová kreslící hra pro přátele. Vytvořte místnost nebo se připojte ke hře!
@@ -191,28 +182,12 @@ const Index = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex space-x-2">
-                <Input
-                  placeholder="Vaše jméno"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  className="rounded-xl border-2 focus:border-purple-500 transition-colors flex-1"
-                  disabled={loading}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={generateRandomName}
-                  className="rounded-xl flex-shrink-0"
-                  disabled={loading}
-                >
+                <Input placeholder="Vaše jméno" value={playerName} onChange={e => setPlayerName(e.target.value)} className="rounded-xl border-2 focus:border-purple-500 transition-colors flex-1" disabled={loading} />
+                <Button variant="outline" size="icon" onClick={generateRandomName} className="rounded-xl flex-shrink-0" disabled={loading}>
                   <Dices className="w-4 h-4" />
                 </Button>
               </div>
-              <Button 
-                onClick={createRoom}
-                className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105"
-                disabled={loading}
-              >
+              <Button onClick={createRoom} className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105" disabled={loading}>
                 <Gamepad2 className="w-5 h-5 mr-2" />
                 {loading ? 'Vytváří se...' : 'Vytvořit hru'}
               </Button>
@@ -231,28 +206,12 @@ const Index = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex space-x-2">
-                <Input
-                  placeholder="Vaše jméno"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  className="rounded-xl border-2 focus:border-green-500 transition-colors flex-1"
-                  disabled={loading}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={generateRandomName}
-                  className="rounded-xl flex-shrink-0"
-                  disabled={loading}
-                >
+                <Input placeholder="Vaše jméno" value={playerName} onChange={e => setPlayerName(e.target.value)} className="rounded-xl border-2 focus:border-green-500 transition-colors flex-1" disabled={loading} />
+                <Button variant="outline" size="icon" onClick={generateRandomName} className="rounded-xl flex-shrink-0" disabled={loading}>
                   <Dices className="w-4 h-4" />
                 </Button>
               </div>
-              <Button 
-                onClick={joinRandomGame}
-                className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105"
-                disabled={loading}
-              >
+              <Button onClick={joinRandomGame} className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105" disabled={loading}>
                 <Shuffle className="w-5 h-5 mr-2" />
                 {loading ? 'Vytváří se...' : 'Najít hru'}
               </Button>
@@ -271,36 +230,13 @@ const Index = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex space-x-2">
-                <Input
-                  placeholder="Vaše jméno"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1"
-                  disabled={loading}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={generateRandomName}
-                  className="rounded-xl flex-shrink-0"
-                  disabled={loading}
-                >
+                <Input placeholder="Vaše jméno" value={playerName} onChange={e => setPlayerName(e.target.value)} className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1" disabled={loading} />
+                <Button variant="outline" size="icon" onClick={generateRandomName} className="rounded-xl flex-shrink-0" disabled={loading}>
                   <Dices className="w-4 h-4" />
                 </Button>
               </div>
-              <Input
-                placeholder="Kód místnosti"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                className="rounded-xl border-2 focus:border-blue-500 transition-colors"
-                disabled={loading}
-              />
-              <Button 
-                onClick={joinRoom}
-                variant="outline"
-                className="w-full rounded-xl h-12 text-lg font-semibold border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 hover:scale-105"
-                disabled={loading}
-              >
+              <Input placeholder="Kód místnosti" value={roomCode} onChange={e => setRoomCode(e.target.value.toUpperCase())} className="rounded-xl border-2 focus:border-blue-500 transition-colors" disabled={loading} />
+              <Button onClick={joinRoom} variant="outline" className="w-full rounded-xl h-12 text-lg font-semibold border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 hover:scale-105" disabled={loading}>
                 {loading ? 'Připojuje se...' : 'Připojit se ke hře'}
               </Button>
             </CardContent>
@@ -313,37 +249,29 @@ const Index = () => {
             Proč si zamilujete DrawGuess?
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                icon: "🎨",
-                title: "Kreativní kreslení",
-                description: "Plynulé kreslení s pokročilými nástroji"
-              },
-              {
-                icon: "🌍",
-                title: "Více jazyků",
-                description: "Slovníky v češtině, angličtině a dalších"
-              },
-              {
-                icon: "📱",
-                title: "Všechna zařízení",
-                description: "Perfektní na počítači i telefonu"
-              }
-            ].map((feature, index) => (
-              <div key={index} className="text-center p-6 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-300">
+            {[{
+            icon: "🎨",
+            title: "Kreativní kreslení",
+            description: "Plynulé kreslení s pokročilými nástroji"
+          }, {
+            icon: "🌍",
+            title: "Více jazyků",
+            description: "Slovníky v češtině, angličtině a dalších"
+          }, {
+            icon: "📱",
+            title: "Všechna zařízení",
+            description: "Perfektní na počítači i telefonu"
+          }].map((feature, index) => <div key={index} className="text-center p-6 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-300">
                 <div className="text-4xl mb-4">{feature.icon}</div>
                 <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </div>
 
       {/* OG Image Generator - only visible in development */}
       {process.env.NODE_ENV === 'development' && <OGImageGenerator />}
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
