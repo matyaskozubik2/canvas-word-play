@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { gameService } from '@/services/gameService';
 import { OGImageGenerator } from '@/components/OGImageGenerator';
+import { QRScanner } from '@/components/QRScanner';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { GameCards } from '@/components/GameCards';
@@ -15,6 +17,7 @@ const Index = () => {
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showOGGenerator, setShowOGGenerator] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -149,6 +152,14 @@ const Index = () => {
     }
   };
 
+  const handleQRCodeScanned = (scannedCode: string) => {
+    setRoomCode(scannedCode);
+    toast({
+      title: "QR kód naskenován!",
+      description: `Kód místnosti: ${scannedCode}`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 transition-all duration-500">
       <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
@@ -167,6 +178,7 @@ const Index = () => {
           createRoom={createRoom}
           joinRandomGame={joinRandomGame}
           joinRoom={joinRoom}
+          onShowQRScanner={() => setShowQRScanner(true)}
         />
 
         <FeaturesSection />
@@ -175,6 +187,11 @@ const Index = () => {
       <Footer onShowOGGenerator={() => setShowOGGenerator(true)} />
 
       <OGImageGenerator isVisible={showOGGenerator} />
+      <QRScanner 
+        isVisible={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onCodeScanned={handleQRCodeScanned}
+      />
     </div>
   );
 };

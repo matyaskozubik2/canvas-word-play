@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Shuffle, Settings, Gamepad2, Dices } from 'lucide-react';
+import { Users, Shuffle, Settings, Gamepad2, Dices, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ interface GameCardsProps {
   createRoom: () => void;
   joinRandomGame: () => void;
   joinRoom: () => void;
+  onShowQRScanner: () => void;
 }
 
 export const GameCards: React.FC<GameCardsProps> = ({
@@ -26,7 +27,8 @@ export const GameCards: React.FC<GameCardsProps> = ({
   generateRandomName,
   createRoom,
   joinRandomGame,
-  joinRoom
+  joinRoom,
+  onShowQRScanner
 }) => {
   return (
     <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
@@ -139,13 +141,25 @@ export const GameCards: React.FC<GameCardsProps> = ({
               <Dices className="w-4 h-4" />
             </Button>
           </div>
-          <Input 
-            placeholder="Kód místnosti" 
-            value={roomCode} 
-            onChange={e => setRoomCode(e.target.value.toUpperCase())} 
-            className="rounded-xl border-2 focus:border-blue-500 transition-colors" 
-            disabled={loading} 
-          />
+          <div className="flex space-x-2">
+            <Input 
+              placeholder="Kód místnosti" 
+              value={roomCode} 
+              onChange={e => setRoomCode(e.target.value.toUpperCase())} 
+              className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1" 
+              disabled={loading} 
+            />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={onShowQRScanner} 
+              className="rounded-xl flex-shrink-0" 
+              disabled={loading}
+              title="Skenovat QR kód"
+            >
+              <QrCode className="w-4 h-4" />
+            </Button>
+          </div>
           <Button 
             onClick={joinRoom} 
             variant="outline" 
