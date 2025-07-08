@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle, AlertCircle } from 'lucide-react';
+import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle, AlertCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +27,7 @@ const Lobby = () => {
   });
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const [qrCodeClicked, setQrCodeClicked] = useState(false);
 
   const { game, players, error: realtimeError, startGame: startRealtimeGame } = useRealtimeGame(
     gameData?.game.id || null,
@@ -113,6 +113,38 @@ const Lobby = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleQrCodeClick = () => {
+    setQrCodeClicked(true);
+    setTimeout(() => setQrCodeClicked(false), 300);
+    copyRoomCode();
+  };
+
+  const generateQRCode = (text: string) => {
+    // Simple QR code pattern using CSS for demonstration
+    // In a real app, you'd use a proper QR code library
+    return (
+      <div 
+        className={`w-16 h-16 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 ${
+          qrCodeClicked ? 'animate-pulse scale-125' : ''
+        }`}
+        onClick={handleQrCodeClick}
+        title={`QR kód pro místnost: ${text}`}
+      >
+        <div className="grid grid-cols-4 gap-px">
+          {Array.from({ length: 16 }, (_, i) => (
+            <div
+              key={i}
+              className={`w-1 h-1 ${
+                // Simple pattern based on room code
+                (text.charCodeAt(i % text.length) + i) % 2 === 0 ? 'bg-black' : 'bg-white'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const handleStartGame = async () => {
@@ -219,14 +251,17 @@ const Lobby = () => {
 
         <div className="flex items-center space-x-4">
           <Card className="p-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Kód místnosti:</span>
-              <Badge variant="secondary" className="text-lg font-mono px-3 py-1">
-                {game.room_code}
-              </Badge>
-              <Button size="sm" variant="outline" onClick={copyRoomCode}>
-                <Copy className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Kód místnosti:</span>
+                <Badge variant="secondary" className="text-lg font-mono px-3 py-1">
+                  {game.room_code}
+                </Badge>
+                <Button size="sm" variant="outline" onClick={copyRoomCode}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              {generateQRCode(game.room_code)}
             </div>
           </Card>
         </div>
