@@ -2,7 +2,11 @@
 import React from 'react';
 import { Palette } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onShowOGGenerator?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onShowOGGenerator }) => {
   return (
     <footer className="mt-32 border-t border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
       <div className="container mx-auto px-6 py-12">
@@ -29,6 +33,14 @@ export const Footer: React.FC = () => {
               <p>DrawGuess Team</p>
               <p>hello@drawguess.app</p>
               <p>Česká republika</p>
+              {onShowOGGenerator && (
+                <button
+                  onClick={onShowOGGenerator}
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline cursor-pointer"
+                >
+                  Zobrazit OG tlačítko
+                </button>
+              )}
             </div>
           </div>
 

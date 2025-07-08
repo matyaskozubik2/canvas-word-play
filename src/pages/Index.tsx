@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +14,7 @@ const Index = () => {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOGGenerator, setShowOGGenerator] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -172,10 +172,9 @@ const Index = () => {
         <FeaturesSection />
       </div>
 
-      <Footer />
+      <Footer onShowOGGenerator={() => setShowOGGenerator(true)} />
 
-      {/* OG Image Generator - only visible in development */}
-      {process.env.NODE_ENV === 'development' && <OGImageGenerator />}
+      <OGImageGenerator isVisible={showOGGenerator} />
     </div>
   );
 };

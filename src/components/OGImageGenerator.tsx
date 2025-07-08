@@ -1,7 +1,12 @@
+
 import React from 'react';
 import { Palette } from 'lucide-react';
 
-export const OGImageGenerator: React.FC = () => {
+interface OGImageGeneratorProps {
+  isVisible: boolean;
+}
+
+export const OGImageGenerator: React.FC<OGImageGeneratorProps> = ({ isVisible }) => {
   const downloadOGImage = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
@@ -97,6 +102,10 @@ export const OGImageGenerator: React.FC = () => {
     link.href = canvas.toDataURL();
     link.click();
   };
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
