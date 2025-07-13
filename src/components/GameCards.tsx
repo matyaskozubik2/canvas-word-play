@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Users, Shuffle, Settings, Gamepad2, Dices, QrCode, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Shuffle, Settings, Gamepad2, QrCode } from 'lucide-react';
+import { GameCard } from './GameCard';
+import { GameCardBackdrop } from './GameCardBackdrop';
 
 interface GameCardsProps {
   playerName: string;
@@ -49,231 +48,74 @@ export const GameCards: React.FC<GameCardsProps> = ({
     setExpandedCard(null);
   };
 
+  const cardConfigs = [
+    {
+      type: 'create',
+      icon: Users,
+      title: 'Vytvořit místnost',
+      description: 'Založte novou hru a pozvěte přátele',
+      gradientFrom: 'from-purple-500',
+      gradientTo: 'to-pink-500',
+      focusColor: 'focus:border-purple-500',
+      action: createRoom,
+      actionText: 'Vytvořit hru',
+      actionIcon: Gamepad2,
+    },
+    {
+      type: 'random',
+      icon: Shuffle,
+      title: 'Náhodná hra',
+      description: 'Zahrajte si s neznámými hráči',
+      gradientFrom: 'from-green-500',
+      gradientTo: 'to-emerald-500',
+      focusColor: 'focus:border-green-500',
+      action: joinRandomGame,
+      actionText: 'Najít hru',
+      actionIcon: Shuffle,
+    },
+    {
+      type: 'join',
+      icon: Settings,
+      title: 'Připojit se',
+      description: 'Vstupte do existující místnosti',
+      gradientFrom: 'from-blue-500',
+      gradientTo: 'to-cyan-500',
+      focusColor: 'focus:border-blue-500',
+      action: joinRoom,
+      actionText: 'Připojit se ke hře',
+      actionIcon: QrCode,
+      showRoomCodeInput: true,
+    },
+  ];
+
   return (
     <>
-      {/* Backdrop overlay */}
-      {expandedCard && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ease-out animate-in fade-in-0" 
-          onClick={closeExpandedCard}
-        />
-      )}
+      <GameCardBackdrop 
+        isVisible={!!expandedCard}
+        onClick={closeExpandedCard}
+      />
       
       <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 relative">
-        {/* Create Room Card */}
-        <Card 
-          className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'create' 
-              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
-              : 'hover:scale-105'
-          }`}
-          onClick={() => !loading && setExpandedCard(expandedCard === 'create' ? null : 'create')}
-        >
-          {expandedCard === 'create' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={closeExpandedCard}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-          <CardHeader className="text-center pb-4">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl">Vytvořit místnost</CardTitle>
-            <CardDescription>Založte novou hru a pozvěte přátele</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="Vaše jméno" 
-                value={playerName} 
-                onChange={e => setPlayerName(e.target.value)} 
-                className="rounded-xl border-2 focus:border-purple-500 transition-colors flex-1" 
-                disabled={loading} 
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  generateRandomName();
-                }} 
-                className="rounded-xl flex-shrink-0" 
-                disabled={loading}
-              >
-                <Dices className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick('create', createRoom);
-              }} 
-              className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-105" 
-              disabled={loading}
-            >
-              <Gamepad2 className="w-5 h-5 mr-2" />
-              {loading ? 'Vytváří se...' : 'Vytvořit hru'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Join Random Game Card */}
-        <Card 
-          className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'random' 
-              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
-              : 'hover:scale-105'
-          }`}
-          onClick={() => !loading && setExpandedCard(expandedCard === 'random' ? null : 'random')}
-        >
-          {expandedCard === 'random' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={closeExpandedCard}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-500"></div>
-          <CardHeader className="text-center pb-4">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-              <Shuffle className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl">Náhodná hra</CardTitle>
-            <CardDescription>Zahrajte si s neznámými hráči</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="Vaše jméno" 
-                value={playerName} 
-                onChange={e => setPlayerName(e.target.value)} 
-                className="rounded-xl border-2 focus:border-green-500 transition-colors flex-1" 
-                disabled={loading} 
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  generateRandomName();
-                }} 
-                className="rounded-xl flex-shrink-0" 
-                disabled={loading}
-              >
-                <Dices className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick('random', joinRandomGame);
-              }} 
-              className="w-full rounded-xl h-12 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-105" 
-              disabled={loading}
-            >
-              <Shuffle className="w-5 h-5 mr-2" />
-              {loading ? 'Vytváří se...' : 'Najít hru'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Join Room Card */}
-        <Card 
-          className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'join' 
-              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
-              : 'hover:scale-105'
-          }`}
-          onClick={() => !loading && setExpandedCard(expandedCard === 'join' ? null : 'join')}
-        >
-          {expandedCard === 'join' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={closeExpandedCard}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-          <CardHeader className="text-center pb-4">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-              <Settings className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl">Připojit se</CardTitle>
-            <CardDescription>Vstupte do existující místnosti</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="Vaše jméno" 
-                value={playerName} 
-                onChange={e => setPlayerName(e.target.value)} 
-                className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1" 
-                disabled={loading} 
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  generateRandomName();
-                }} 
-                className="rounded-xl flex-shrink-0" 
-                disabled={loading}
-              >
-                <Dices className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="Kód místnosti" 
-                value={roomCode} 
-                onChange={e => setRoomCode(e.target.value.toUpperCase())} 
-                className="rounded-xl border-2 focus:border-blue-500 transition-colors flex-1" 
-                disabled={loading} 
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onShowQRScanner();
-                }} 
-                className="rounded-xl flex-shrink-0" 
-                disabled={loading}
-                title="Skenovat QR kód"
-              >
-                <QrCode className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick('join', joinRoom);
-              }} 
-              variant="outline" 
-              className="w-full rounded-xl h-12 text-lg font-semibold border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 hover:scale-105" 
-              disabled={loading}
-            >
-              {loading ? 'Připojuje se...' : 'Připojit se ke hře'}
-            </Button>
-          </CardContent>
-        </Card>
+        {cardConfigs.map((config) => (
+          <GameCard
+            key={config.type}
+            {...config}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            roomCode={config.showRoomCodeInput ? roomCode : undefined}
+            setRoomCode={config.showRoomCodeInput ? setRoomCode : undefined}
+            loading={loading}
+            expanded={expandedCard === config.type}
+            onCardClick={() => !loading && setExpandedCard(expandedCard === config.type ? null : config.type)}
+            onClose={closeExpandedCard}
+            onAction={(e) => {
+              e.stopPropagation();
+              handleCardClick(config.type, config.action);
+            }}
+            generateRandomName={generateRandomName}
+            onShowQRScanner={config.showRoomCodeInput ? onShowQRScanner : undefined}
+          />
+        ))}
       </div>
     </>
   );
