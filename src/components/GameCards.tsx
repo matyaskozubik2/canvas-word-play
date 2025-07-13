@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Users, Shuffle, Settings, Gamepad2, Dices, QrCode } from 'lucide-react';
+import { Users, Shuffle, Settings, Gamepad2, Dices, QrCode, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,21 +44,41 @@ export const GameCards: React.FC<GameCardsProps> = ({
     }, 300);
   };
 
+  const closeExpandedCard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedCard(null);
+  };
+
   return (
     <>
       {/* Backdrop overlay */}
       {expandedCard && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in" />
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ease-out animate-in fade-in-0" 
+          onClick={closeExpandedCard}
+        />
       )}
       
       <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 relative">
         {/* Create Room Card */}
         <Card 
           className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'create' ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit animate-scale-in' : 'hover:scale-105'
+            expandedCard === 'create' 
+              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
+              : 'hover:scale-105'
           }`}
           onClick={() => !loading && setExpandedCard(expandedCard === 'create' ? null : 'create')}
         >
+          {expandedCard === 'create' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={closeExpandedCard}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
@@ -107,10 +127,22 @@ export const GameCards: React.FC<GameCardsProps> = ({
         {/* Join Random Game Card */}
         <Card 
           className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'random' ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit animate-scale-in' : 'hover:scale-105'
+            expandedCard === 'random' 
+              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
+              : 'hover:scale-105'
           }`}
           onClick={() => !loading && setExpandedCard(expandedCard === 'random' ? null : 'random')}
         >
+          {expandedCard === 'random' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={closeExpandedCard}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-500"></div>
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center">
@@ -159,10 +191,22 @@ export const GameCards: React.FC<GameCardsProps> = ({
         {/* Join Room Card */}
         <Card 
           className={`relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 cursor-pointer ${
-            expandedCard === 'join' ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit animate-scale-in' : 'hover:scale-105'
+            expandedCard === 'join' 
+              ? 'fixed inset-0 z-50 m-auto max-w-md max-h-fit transition-all duration-500 ease-out animate-in zoom-in-95 fade-in-0' 
+              : 'hover:scale-105'
           }`}
           onClick={() => !loading && setExpandedCard(expandedCard === 'join' ? null : 'join')}
         >
+          {expandedCard === 'join' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10 rounded-full h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={closeExpandedCard}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
           <CardHeader className="text-center pb-4">
             <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
