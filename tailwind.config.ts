@@ -106,13 +106,24 @@ export default {
 					'50%': {
 						opacity: '0.5'
 					}
+				},
+				'scale-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.8) translate(-50%, -50%)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1) translate(-50%, -50%)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'scale-in': 'scale-in 0.3s ease-out'
 			},
 			boxShadow: {
 				'3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.3)',
