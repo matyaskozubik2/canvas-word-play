@@ -152,6 +152,43 @@ const Index = () => {
     }
   };
 
+  const startSinglePlayerGame = async () => {
+    if (!playerName.trim()) {
+      toast({
+        title: "Chyba",
+        description: "Prosím, zadejte své jméno",
+        variant: "destructive"
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      console.log('Starting single player game for:', playerName);
+      toast({
+        title: "Spouštění hry...",
+        description: "Vytváříme hru pro jednoho hráče"
+      });
+
+      // Small delay for UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      navigate('/game', {
+        state: {
+          playerName,
+          isSinglePlayer: true
+        }
+      });
+    } catch (error) {
+      console.error('Error starting single player game:', error);
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se spustit hru pro jednoho hráče",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleQRCodeScanned = (scannedCode: string) => {
     setRoomCode(scannedCode);
     toast({
@@ -178,6 +215,7 @@ const Index = () => {
           createRoom={createRoom}
           joinRandomGame={joinRandomGame}
           joinRoom={joinRoom}
+          startSinglePlayerGame={startSinglePlayerGame}
           onShowQRScanner={() => setShowQRScanner(true)}
         />
 

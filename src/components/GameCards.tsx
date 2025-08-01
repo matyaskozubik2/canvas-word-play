@@ -14,6 +14,7 @@ interface GameCardsProps {
   createRoom: () => void;
   joinRandomGame: () => void;
   joinRoom: () => void;
+  startSinglePlayerGame: () => void;
   onShowQRScanner: () => void;
 }
 
@@ -27,6 +28,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
   createRoom,
   joinRandomGame,
   joinRoom,
+  startSinglePlayerGame,
   onShowQRScanner
 }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
       gradientFrom: 'from-orange-500',
       gradientTo: 'to-red-500',
       focusColor: 'focus:border-orange-500',
-      action: () => console.log('Single player game'),
+      action: startSinglePlayerGame,
       actionText: 'Začít hru',
       actionIcon: Gamepad2,
     },
