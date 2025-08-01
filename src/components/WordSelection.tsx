@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface WordSelectionProps {
   wordOptions: string[];
@@ -29,21 +29,37 @@ export const WordSelection: React.FC<WordSelectionProps> = ({ wordOptions, onSel
   const isHardWord = (word: string) => HARD_WORDS.includes(word);
 
   return (
-    <div className="flex justify-center">
-      <Select onValueChange={onSelectWord}>
-        <SelectTrigger className="w-full max-w-xs">
-          <SelectValue placeholder="Vyberte slovo" />
-        </SelectTrigger>
-        <SelectContent>
+    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-xl">
+      <div className="flex flex-col items-center gap-6 p-8">
+        <h2 className="text-2xl font-bold text-white text-center mb-4">
+          Vyberte si slovo ke kreslení:
+        </h2>
+        
+        <div className="flex flex-wrap justify-center gap-4 max-w-2xl">
           {wordOptions.map((word) => (
-            <SelectItem key={word} value={word}>
-              <span className={isHardWord(word) ? 'text-red-500 font-semibold' : ''}>
-                {word}
-              </span>
-            </SelectItem>
+            <Card 
+              key={word} 
+              className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl bg-white/95 backdrop-blur-sm min-w-[200px]"
+              onClick={() => onSelectWord(word)}
+            >
+              <CardContent className="p-6 text-center">
+                <span className={`text-lg font-semibold ${
+                  isHardWord(word) ? 'text-red-600' : 'text-green-600'
+                }`}>
+                  {word}
+                </span>
+                <div className="mt-2 text-xs text-gray-500">
+                  {isHardWord(word) ? 'Těžké' : 'Lehké'}
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </SelectContent>
-      </Select>
+        </div>
+        
+        <p className="text-white/80 text-sm text-center max-w-md">
+          Klikněte na slovo, které chcete kreslit. Zelená slova jsou lehčí, červená těžší.
+        </p>
+      </div>
     </div>
   );
 };

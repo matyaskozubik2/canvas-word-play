@@ -301,15 +301,27 @@ export const gameService = {
   generateWordOptions(): string[] {
     const EASY_WORDS = [
       'dům', 'ryba', 'auto', 'kočka', 'pes', 'slunce', 'měsíc', 'strom', 'květina', 'pták',
-      'lampa', 'mrak', 'hory', 'kniha', 'mobil', 'tužka', 'stůl', 'židle', 'balón', 'okno'
+      'lampa', 'mrak', 'hory', 'kniha', 'mobil', 'tužka', 'stůl', 'židle', 'balón', 'okno',
+      'míč', 'bota', 'klobouk', 'brýle', 'hodinky', 'klíč', 'dort', 'jablko', 'srdce', 'hvězda'
     ];
     const HARD_WORDS = [
       'mobilní aplikace', 'internet', 'nákup', 'nemocnice', 'doktor', 'letiště', 'pilot',
-      'programátor', 'skladatel', 'zpěvák', 'kuchař', 'architekt', 'sochař', 'malíř'
+      'programátor', 'skladatel', 'zpěvák', 'kuchař', 'architekt', 'sochař', 'malíř',
+      'čarodějnice', 'rytíř', 'princezna', 'robot', 'superhrdina', 'dinosaurus', 'planeta',
+      'galaxie', 'vesmír', 'meteor', 'astronaut', 'skafandr', 'fotografie', 'časopis'
     ];
     
-    const allWords = [...EASY_WORDS, ...HARD_WORDS];
-    const shuffled = [...allWords].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 3);
+    // Always include at least one easy word
+    const shuffledEasy = [...EASY_WORDS].sort(() => Math.random() - 0.5);
+    const shuffledHard = [...HARD_WORDS].sort(() => Math.random() - 0.5);
+    
+    // Pick 1 easy word and 2 hard words, then shuffle the final selection
+    const selectedWords = [
+      shuffledEasy[0],
+      shuffledHard[0],
+      shuffledHard[1]
+    ];
+    
+    return selectedWords.sort(() => Math.random() - 0.5);
   }
 };

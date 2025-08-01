@@ -38,7 +38,7 @@ export const GameArea: React.FC<GameAreaProps> = ({
               {phase === 'word-selection' && isCurrentDrawer ? (
                 <div className="flex items-center space-x-2">
                   <Palette className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                  <span className="text-sm font-bold truncate">Vyberte si slovo ke kreslení:</span>
+                  <span className="text-sm font-bold truncate">Vyberte si slovo ke kreslení</span>
                 </div>
               ) : isCurrentDrawer ? (
                 <div className="flex items-center space-x-2">
@@ -62,10 +62,6 @@ export const GameArea: React.FC<GameAreaProps> = ({
             </Badge>
           </div>
           
-          {phase === 'word-selection' && isCurrentDrawer && wordOptions && (
-            <WordSelection wordOptions={wordOptions} onSelectWord={onSelectWord} />
-          )}
-          
           {!isCurrentDrawer && phase === 'drawing' && (
             <div className="text-center">
               <div className="text-lg font-mono font-bold text-purple-600 dark:text-purple-400 tracking-widest">
@@ -78,22 +74,24 @@ export const GameArea: React.FC<GameAreaProps> = ({
           )}
         </div>
       </CardHeader>
-      <CardContent className="h-[calc(100%-80px)] p-2">
+      <CardContent className="h-[calc(100%-80px)] p-2 relative">
         {phase === 'word-selection' ? (
-          <div className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              {isCurrentDrawer ? (
-                <div>
-                  <Palette className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Vyberte si slovo ke kreslení</p>
-                </div>
-              ) : (
-                <div>
-                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <div className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700 relative">
+            <DrawingCanvas 
+              canDraw={false}
+              className="w-full h-full rounded-xl"
+            />
+            {isCurrentDrawer && wordOptions && (
+              <WordSelection wordOptions={wordOptions} onSelectWord={onSelectWord} />
+            )}
+            {!isCurrentDrawer && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-xl">
+                <div className="text-center text-white">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-80" />
                   <p className="text-lg">Čekáme na výběr slova...</p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           <DrawingCanvas 
