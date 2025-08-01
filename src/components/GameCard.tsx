@@ -28,6 +28,7 @@ interface GameCardProps {
   actionText: string;
   actionIcon: LucideIcon;
   showRoomCodeInput?: boolean;
+  badge?: string;
 }
 
 export const GameCard: React.FC<GameCardProps> = ({
@@ -52,6 +53,7 @@ export const GameCard: React.FC<GameCardProps> = ({
   actionText,
   actionIcon: ActionIcon,
   showRoomCodeInput = false,
+  badge,
 }) => {
   return (
     <Card 
@@ -73,6 +75,11 @@ export const GameCard: React.FC<GameCardProps> = ({
         </Button>
       )}
       <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${gradientFrom} ${gradientTo}`}></div>
+      {badge && (
+        <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white`}>
+          {badge}
+        </div>
+      )}
       <CardHeader className="text-center pb-4">
         <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-2xl flex items-center justify-center`}>
           <Icon className="w-8 h-8 text-white" />

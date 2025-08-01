@@ -60,6 +60,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
       action: createRoom,
       actionText: 'Vytvořit hru',
       actionIcon: Gamepad2,
+      badge: 'Více hráčů',
     },
     {
       type: 'random',
@@ -72,6 +73,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
       action: joinRandomGame,
       actionText: 'Najít hru',
       actionIcon: Shuffle,
+      badge: 'Více hráčů',
     },
     {
       type: 'join',
@@ -85,6 +87,20 @@ export const GameCards: React.FC<GameCardsProps> = ({
       actionText: 'Připojit se ke hře',
       actionIcon: QrCode,
       showRoomCodeInput: true,
+      badge: 'Více hráčů',
+    },
+    {
+      type: 'single',
+      icon: Gamepad2,
+      title: 'Jeden hráč',
+      description: 'Zahrajte si sami proti počítači',
+      gradientFrom: 'from-orange-500',
+      gradientTo: 'to-red-500',
+      focusColor: 'focus:border-orange-500',
+      action: () => console.log('Single player game'),
+      actionText: 'Začít hru',
+      actionIcon: Gamepad2,
+      badge: 'Jeden hráč',
     },
   ];
 
@@ -95,7 +111,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
         onClick={closeExpandedCard}
       />
       
-      <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 relative">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
         {cardConfigs.map((config) => (
           <GameCard
             key={config.type}
