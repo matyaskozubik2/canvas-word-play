@@ -30,6 +30,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
   onShowQRScanner
 }) => {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'multiplayer' | 'singleplayer'>('multiplayer');
 
   const handleCardClick = (cardType: string, action: () => void) => {
     if (loading) return;
@@ -48,7 +49,7 @@ export const GameCards: React.FC<GameCardsProps> = ({
     setExpandedCard(null);
   };
 
-  const cardConfigs = [
+  const multiplayerCards = [
     {
       type: 'create',
       icon: Users,
@@ -60,7 +61,6 @@ export const GameCards: React.FC<GameCardsProps> = ({
       action: createRoom,
       actionText: 'Vytvořit hru',
       actionIcon: Gamepad2,
-      badge: 'Více hráčů',
     },
     {
       type: 'random',
@@ -73,7 +73,6 @@ export const GameCards: React.FC<GameCardsProps> = ({
       action: joinRandomGame,
       actionText: 'Najít hru',
       actionIcon: Shuffle,
-      badge: 'Více hráčů',
     },
     {
       type: 'join',
@@ -87,8 +86,10 @@ export const GameCards: React.FC<GameCardsProps> = ({
       actionText: 'Připojit se ke hře',
       actionIcon: QrCode,
       showRoomCodeInput: true,
-      badge: 'Více hráčů',
     },
+  ];
+
+  const singleplayerCards = [
     {
       type: 'single',
       icon: Gamepad2,
@@ -100,9 +101,10 @@ export const GameCards: React.FC<GameCardsProps> = ({
       action: () => console.log('Single player game'),
       actionText: 'Začít hru',
       actionIcon: Gamepad2,
-      badge: 'Jeden hráč',
     },
   ];
+
+  const currentCards = activeTab === 'multiplayer' ? multiplayerCards : singleplayerCards;
 
   return (
     <>
@@ -111,27 +113,60 @@ export const GameCards: React.FC<GameCardsProps> = ({
         onClick={closeExpandedCard}
       />
       
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-        {cardConfigs.map((config) => (
-          <GameCard
-            key={config.type}
-            {...config}
-            playerName={playerName}
-            setPlayerName={setPlayerName}
-            roomCode={config.showRoomCodeInput ? roomCode : undefined}
-            setRoomCode={config.showRoomCodeInput ? setRoomCode : undefined}
-            loading={loading}
-            expanded={expandedCard === config.type}
-            onCardClick={() => !loading && setExpandedCard(expandedCard === config.type ? null : config.type)}
-            onClose={closeExpandedCard}
-            onAction={(e) => {
-              e.stopPropagation();
-              handleCardClick(config.type, config.action);
-            }}
-            generateRandomName={generateRandomName}
-            onShowQRScanner={config.showRoomCodeInput ? onShowQRScanner : undefined}
-          />
-        ))}
+      <div className="max-w-5xl mx-auto">
+        {/* Záložky */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg">
+            <button
+              onClick={() => setActiveTab('multiplayer')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                activeTab === 'multiplayer'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Users className="w-5 h-5 inline mr-2" />
+              Více hráčů
+            </button>
+            <button
+              onClick={() => setActiveTab('singleplayer')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                activeTab === 'singleplayer'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Gamepad2 className="w-5 h-5 inline mr-2" />
+              Jeden hráč
+            </button>
+          </div>
+        </div>
+
+        {/* Karty */}
+        <div className={`grid gap-8 relative ${
+          activeTab === 'multiplayer' ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md mx-auto'
+        }`}>
+          {currentCards.map((config) => (
+            <GameCard
+              key={config.type}
+              {...config}
+              playerName={playerName}
+              setPlayerName={setPlayerName}
+              roomCode={('showRoomCodeInput' in config && config.showRoomCodeInput) ? roomCode : undefined}
+              setRoomCode={('showRoomCodeInput' in config && config.showRoomCodeInput) ? setRoomCode : undefined}
+              loading={loading}
+              expanded={expandedCard === config.type}
+              onCardClick={() => !loading && setExpandedCard(expandedCard === config.type ? null : config.type)}
+              onClose={closeExpandedCard}
+              onAction={(e) => {
+                e.stopPropagation();
+                handleCardClick(config.type, config.action);
+              }}
+              generateRandomName={generateRandomName}
+              onShowQRScanner={('showRoomCodeInput' in config && config.showRoomCodeInput) ? onShowQRScanner : undefined}
+            />
+          ))}
+        </div>
       </div>
     </>
   );
