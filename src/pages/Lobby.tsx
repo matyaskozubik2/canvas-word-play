@@ -4,6 +4,7 @@ import { Copy, Crown, Users, Settings, Play, ArrowLeft, Shuffle, AlertCircle, Qr
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import QRCodeLib from 'qrcode';
 import { useToast } from '@/hooks/use-toast';
 import { GameSettings } from '@/components/GameSettings';
 import { PlayerList } from '@/components/PlayerList';
@@ -28,6 +29,7 @@ const Lobby = () => {
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const [qrCodeClicked, setQrCodeClicked] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
   const { game, players, error: realtimeError, startGame: startRealtimeGame } = useRealtimeGame(
     gameData?.game.id || null,
@@ -46,6 +48,13 @@ const Lobby = () => {
       });
     }
   }, [game?.phase, gameData, navigate, playerName]);
+
+  // Generate QR code when game data is available
+  useEffect(() => {
+    if (game?.room_code) {
+      generateQRCodeUrl(game.room_code);
+    }
+  }, [game?.room_code]);
 
   useEffect(() => {
     if (!playerName) {
@@ -121,28 +130,43 @@ const Lobby = () => {
     copyRoomCode();
   };
 
-  const generateQRCode = (text: string) => {
-    // Simple QR code pattern using CSS for demonstration
-    // In a real app, you'd use a proper QR code library
+  const generateQRCodeUrl = async (roomCode: string) => {
+    try {
+      const gameUrl = `${window.location.origin}/?join=${roomCode}`;
+      const qrDataUrl = await QRCodeLib.toDataURL(gameUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeDataUrl(qrDataUrl);
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
+  };
+
+  const generateQRCode = (roomCode: string) => {
     return (
       <div 
-        className={`w-16 h-16 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 ${
+        className={`w-20 h-20 bg-white border-2 border-gray-300 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
           qrCodeClicked ? 'animate-pulse scale-125' : ''
         }`}
         onClick={handleQrCodeClick}
-        title={`QR kód pro místnost: ${text}`}
+        title={`QR kód pro místnost: ${roomCode}`}
       >
-        <div className="grid grid-cols-4 gap-px">
-          {Array.from({ length: 16 }, (_, i) => (
-            <div
-              key={i}
-              className={`w-1 h-1 ${
-                // Simple pattern based on room code
-                (text.charCodeAt(i % text.length) + i) % 2 === 0 ? 'bg-black' : 'bg-white'
-              }`}
-            />
-          ))}
-        </div>
+        {qrCodeDataUrl ? (
+          <img 
+            src={qrCodeDataUrl} 
+            alt={`QR kód pro místnost ${roomCode}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <QrCode className="w-8 h-8 text-gray-400" />
+          </div>
+        )}
       </div>
     );
   };

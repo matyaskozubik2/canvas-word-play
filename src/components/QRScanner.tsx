@@ -68,6 +68,21 @@ export const QRScanner: React.FC<QRScannerProps> = ({ isVisible, onClose, onCode
 
     if (code) {
       console.log('QR code detected:', code.data);
+      
+      // Check if it's a URL with join parameter
+      try {
+        const url = new URL(code.data);
+        const joinCode = url.searchParams.get('join');
+        if (joinCode) {
+          onCodeScanned(joinCode.trim().toUpperCase());
+          onClose();
+          return;
+        }
+      } catch (e) {
+        // Not a URL, treat as room code
+      }
+      
+      // Fallback to treating as direct room code
       onCodeScanned(code.data.trim().toUpperCase());
       onClose();
       return;

@@ -26,7 +26,18 @@ const Index = () => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setDarkMode(isDark);
     if (isDark) document.documentElement.classList.add('dark');
-  }, []);
+
+    // Check for join parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinCode = urlParams.get('join');
+    if (joinCode) {
+      setRoomCode(joinCode.toUpperCase());
+      toast({
+        title: "QR kód naskenován!",
+        description: `Kód místnosti: ${joinCode}`
+      });
+    }
+  }, [toast]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
