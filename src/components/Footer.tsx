@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { Palette } from 'lucide-react';
+import { Palette, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface FooterProps {
   onShowOGGenerator?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onShowOGGenerator }) => {
+  const navigate = useNavigate();
   return (
     <footer className="mt-32 border-t border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
       <div className="container mx-auto px-6 py-12">
@@ -36,11 +38,18 @@ export const Footer: React.FC<FooterProps> = ({ onShowOGGenerator }) => {
               {onShowOGGenerator && (
                 <button
                   onClick={onShowOGGenerator}
-                  className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline cursor-pointer"
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 underline cursor-pointer block mb-2"
                 >
                   Zobrazit OG tlačítko
                 </button>
               )}
+              <button
+                onClick={() => navigate('/auth')}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline cursor-pointer flex items-center"
+              >
+                <User className="w-4 h-4 mr-1" />
+                Přihlásit se
+              </button>
             </div>
           </div>
 
