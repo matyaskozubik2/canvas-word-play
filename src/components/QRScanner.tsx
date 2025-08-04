@@ -1,9 +1,10 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { QrCode, X, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import jsQR from 'jsqr';
 
 interface QRScannerProps {
   isVisible: boolean;
@@ -49,6 +50,33 @@ export const QRScanner: React.FC<QRScannerProps> = ({ isVisible, onClose, onCode
     setIsScanning(false);
   };
 
+  const scanFrame = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current || !isScanning) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+    if (code) {
+      console.log('QR code detected:', code.data);
+      onCodeScanned(code.data.trim().toUpperCase());
+      onClose();
+      return;
+    }
+
+    // Continue scanning
+    requestAnimationFrame(scanFrame);
+  }, [isScanning, onCodeScanned, onClose]);
+
   const handleManualInput = () => {
     const code = prompt('Zadejte kód místnosti:');
     if (code && code.trim()) {
@@ -56,6 +84,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({ isVisible, onClose, onCode
       onClose();
     }
   };
+
+  useEffect(() => {
+    if (isScanning && videoRef.current) {
+      scanFrame();
+    }
+  }, [isScanning, scanFrame]);
 
   useEffect(() => {
     if (isVisible && !isScanning) {
