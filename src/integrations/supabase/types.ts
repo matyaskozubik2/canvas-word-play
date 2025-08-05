@@ -172,6 +172,36 @@ export type Database = {
         }
         Relationships: []
       }
+      moderation_logs: {
+        Row: {
+          action: string
+          admin_email: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           avatar_color: string | null

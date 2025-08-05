@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BarChart3, Settings, Home, Crown } from 'lucide-react';
+import { LogOut, Users, BarChart3, Settings, Home, Crown, Search, Trash2, UserX, Eye, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminPanel } from '@/hooks/useAdminPanel';
 
 const Admin = () => {
   const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const {
+    games,
+    selectedGame,
+    setSelectedGame,
+    searchTerm,
+    setSearchTerm,
+    loading,
+    kickPlayer,
+    deleteGame,
+    getPhaseText,
+    refreshGames
+  } = useAdminPanel();
 
   useEffect(() => {
     // Set up auth state listener
@@ -21,7 +37,7 @@ const Admin = () => {
         if (!session?.user) {
           navigate('/auth');
         }
-        setLoading(false);
+        setAuthLoading(false);
       }
     );
 
@@ -31,7 +47,7 @@ const Admin = () => {
       if (!session?.user) {
         navigate('/auth');
       }
-      setLoading(false);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -55,7 +71,7 @@ const Admin = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 flex items-center justify-center">
         <div className="text-center">
@@ -125,15 +141,20 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-            Vítejte v admin panelu
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Zde můžete spravovat DrawGuess aplikaci a sledovat statistiky.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Pro registraci použijte email: matyaskozubik2@icloud.com a heslo: 123456
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+                Aktivní herní místnosti
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Sledování a správa probíhajících her DrawGuess
+              </p>
+            </div>
+            <Button onClick={refreshGames} variant="outline">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Obnovit
+            </Button>
+          </div>
         </div>
 
         {/* Dashboard Cards */}
@@ -143,7 +164,7 @@ const Admin = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Aktivní hry</p>
-                  <p className="text-3xl font-bold">0</p>
+                  <p className="text-3xl font-bold">{games.length}</p>
                 </div>
                 <BarChart3 className="w-8 h-8 text-blue-200" />
               </div>
@@ -155,7 +176,7 @@ const Admin = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium">Online hráči</p>
-                  <p className="text-3xl font-bold">0</p>
+                  <p className="text-3xl font-bold">{games.reduce((total, game) => total + game.player_count, 0)}</p>
                 </div>
                 <Users className="w-8 h-8 text-green-200" />
               </div>
@@ -166,8 +187,8 @@ const Admin = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Celkem her</p>
-                  <p className="text-3xl font-bold">0</p>
+                  <p className="text-purple-100 text-sm font-medium">V kreslení</p>
+                  <p className="text-3xl font-bold">{games.filter(g => g.phase === 'drawing').length}</p>
                 </div>
                 <Settings className="w-8 h-8 text-purple-200" />
               </div>
@@ -175,87 +196,230 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Admin Tools */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
-                <span>Správa uživatelů</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Spravujte uživatelské účty a oprávnění.
-              </p>
-              <Button className="w-full" disabled>
-                Spravovat uživatele
-                <span className="ml-2 text-xs opacity-70">(Připravuje se)</span>
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Vyhledat místnosti podle kódu nebo ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5" />
-                <span>Statistiky</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Sledujte výkon aplikace a aktivitu uživatelů.
-              </p>
-              <Button className="w-full" disabled>
-                Zobrazit statistiky
-                <span className="ml-2 text-xs opacity-70">(Připravuje se)</span>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="w-5 h-5" />
-                <span>Nastavení aplikace</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Konfigurujte globální nastavení aplikace.
-              </p>
-              <Button className="w-full" disabled>
-                Upravit nastavení
-                <span className="ml-2 text-xs opacity-70">(Připravuje se)</span>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {isMainAdmin && (
-            <Card className="border-yellow-200 dark:border-yellow-700">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Games List */}
+          <div className="lg:col-span-2 xl:col-span-2">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-yellow-700 dark:text-yellow-300">
-                  <Crown className="w-5 h-5" />
-                  <span>Hlavní admin nástroje</span>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>Aktivní místnosti ({games.length})</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Pokročilé nástroje pouze pro hlavního administrátora.
-                </p>
-                <div className="space-y-2">
-                  <Button className="w-full" variant="outline" disabled>
-                    Správa serverů
-                    <span className="ml-2 text-xs opacity-70">(Připravuje se)</span>
-                  </Button>
-                  <Button className="w-full" variant="outline" disabled>
-                    Zálohy databáze
-                    <span className="ml-2 text-xs opacity-70">(Připravuje se)</span>
-                  </Button>
-                </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                  </div>
+                ) : games.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    {searchTerm ? 'Nenalezeny žádné místnosti' : 'Žádné aktivní hry'}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {games.map((game) => (
+                      <div
+                        key={game.id}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedGame?.id === game.id 
+                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' 
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        }`}
+                        onClick={() => setSelectedGame(game)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                              <span className="font-mono font-bold text-lg">{game.room_code}</span>
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {getPhaseText(game.phase)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
+                            <div className="flex items-center space-x-1">
+                              <Users className="w-4 h-4" />
+                              <span>{game.player_count}/{game.max_players}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-4 h-4" />
+                              <span>Kolo {game.current_round}/{game.total_rounds}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                          ID: {game.id.substring(0, 8)}...
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          </div>
+
+          {/* Game Details */}
+          <div className="lg:col-span-2 xl:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Eye className="w-5 h-5" />
+                  <span>Detail místnosti</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedGame ? (
+                  <div className="space-y-6">
+                    {/* Game Info */}
+                    <div>
+                      <h3 className="font-semibold mb-3">Informace o hře</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-300">Kód místnosti:</span>
+                          <span className="font-mono font-bold">{selectedGame.room_code}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-300">Fáze:</span>
+                          <Badge variant="secondary">{getPhaseText(selectedGame.phase)}</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-300">Kolo:</span>
+                          <span>{selectedGame.current_round}/{selectedGame.total_rounds}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-300">Čas na kreslení:</span>
+                          <span>{selectedGame.draw_time}s</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-300">Hráči:</span>
+                          <span>{selectedGame.player_count}/{selectedGame.max_players}</span>
+                        </div>
+                        {selectedGame.current_word && selectedGame.phase === 'drawing' && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-300">Aktuální slovo:</span>
+                            <span className="font-semibold text-purple-600 dark:text-purple-400">
+                              {selectedGame.current_word}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Players List */}
+                    <div>
+                      <h3 className="font-semibold mb-3">Seznam hráčů</h3>
+                      <div className="space-y-2">
+                        {selectedGame.players.map((player) => (
+                          <div
+                            key={player.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div 
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${player.avatar_color}`}
+                              >
+                                {player.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-medium">{player.name}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                  <span>Skóre: {player.score}</span>
+                                  {player.is_host && <Badge variant="outline" className="text-xs">Host</Badge>}
+                                  {selectedGame.current_drawer_id === player.id && (
+                                    <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                      Kreslí
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                  <UserX className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Odstranit hráče</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Opravdu chcete odstranit hráče "{player.name}" ze hry? Tato akce je nevratná.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Zrušit</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => kickPlayer(player.id, player.name, selectedGame.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Odstranit
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Game Actions */}
+                    <div>
+                      <h3 className="font-semibold mb-3">Akce</h3>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="w-full">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Smazat místnost
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Smazat místnost</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Opravdu chcete smazat místnost "{selectedGame.room_code}"? 
+                              Tato akce odstraní všechny hráče, zprávy a data hry. Akce je nevratná.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Zrušit</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteGame(selectedGame.id, selectedGame.room_code)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Smazat
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Eye className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Vyberte místnost pro zobrazení detailů</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
