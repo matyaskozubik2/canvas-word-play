@@ -117,11 +117,19 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error('Signup error:', error);
+      let errorMessage = "Nepodařilo se zaregistrovat. Zkuste to znovu.";
+      
+      if (error.message === 'User already registered') {
+        errorMessage = "Uživatel s tímto emailem už existuje";
+      } else if (error.code === 'weak_password') {
+        errorMessage = "Heslo musí mít alespoň 6 znaků";
+      } else if (error.message?.includes('Password should be at least 6 characters')) {
+        errorMessage = "Heslo musí mít alespoň 6 znaků";
+      }
+      
       toast({
         title: "Chyba registrace",
-        description: error.message === 'User already registered' 
-          ? "Uživatel s tímto emailem už existuje" 
-          : "Nepodařilo se zaregistrovat. Zkuste to znovu.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

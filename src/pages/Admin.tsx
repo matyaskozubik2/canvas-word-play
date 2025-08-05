@@ -131,6 +131,9 @@ const Admin = () => {
           <p className="text-gray-600 dark:text-gray-300">
             Zde můžete spravovat DrawGuess aplikaci a sledovat statistiky.
           </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Pro registraci použijte email: matyaskozubik2@icloud.com a heslo: 123456
+          </p>
         </div>
 
         {/* Dashboard Cards */}
