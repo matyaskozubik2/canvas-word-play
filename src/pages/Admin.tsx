@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BarChart3, Settings, Home, Crown, Search, Trash2, UserX, Eye, Clock, User } from 'lucide-react';
+import { LogOut, Users, BarChart3, Settings, Home, Crown, Search, Trash2, UserX, Eye, Clock, User, Plus, Key, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import { useAdminPanel } from '@/hooks/useAdminPanel';
 const Admin = () => {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [inviteCodes, setInviteCodes] = useState<any[]>([]);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const {
@@ -52,6 +55,82 @@ const Admin = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    if (session) {
+      fetchInviteCodes();
+    }
+  }, [session]);
+
+  const fetchInviteCodes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_invite_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInviteCodes(data || []);
+    } catch (error) {
+      console.error('Error fetching invite codes:', error);
+    }
+  };
+
+  const generateInviteCode = async () => {
+    if (!session) return;
+    
+    setGeneratingCode(true);
+    try {
+      const { data: codeData, error: codeError } = await supabase
+        .rpc('generate_invite_code');
+
+      if (codeError) throw codeError;
+
+      const { error } = await supabase
+        .from('admin_invite_codes')
+        .insert({
+          code: codeData,
+          created_by_admin: session.user.id,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Kód vygenerován",
+        description: `Nový registrační kód: ${codeData}`
+      });
+
+      fetchInviteCodes();
+    } catch (error) {
+      console.error('Error generating invite code:', error);
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se vygenerovat kód",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  const copyToClipboard = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+      toast({
+        title: "Zkopírováno",
+        description: "Kód byl zkopírován do schránky"
+      });
+    } catch (error) {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se zkopírovat kód",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -211,7 +290,63 @@ const Admin = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {/* Games List */}
-          <div className="lg:col-span-2 xl:col-span-2">
+          <div className="lg:col-span-2 xl:col-span-2 space-y-6">
+            {/* Invite Codes Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Key className="w-5 h-5" />
+                    <span>Registrační kódy</span>
+                  </CardTitle>
+                  <Button 
+                    onClick={generateInviteCode}
+                    disabled={generatingCode}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {generatingCode ? "Generuji..." : "Nový kód"}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {inviteCodes.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-4">Žádné kódy k dispozici</p>
+                  ) : (
+                    inviteCodes.map((code) => (
+                      <div key={code.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <code className="font-mono font-bold text-lg">{code.code}</code>
+                          <div className="flex gap-2">
+                            <Badge variant={code.used ? "destructive" : "default"}>
+                              {code.used ? "Použitý" : "Aktivní"}
+                            </Badge>
+                            {code.expires_at && new Date(code.expires_at) < new Date() && (
+                              <Badge variant="outline">Vypršel</Badge>
+                            )}
+                          </div>
+                          {code.used && code.used_by_email && (
+                            <span className="text-xs text-gray-500">({code.used_by_email})</span>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => copyToClipboard(code.code)}
+                          variant="ghost"
+                          size="sm"
+                          disabled={code.used}
+                        >
+                          {copiedCode === code.code ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Games Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">

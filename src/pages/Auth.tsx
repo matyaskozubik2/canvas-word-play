@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { User, Lock, Mail, Eye, EyeOff, ArrowLeft, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -84,10 +85,10 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email || !password || !inviteCode) {
       toast({
         title: "Chyba",
-        description: "Prosím, vyplňte všechna pole",
+        description: "Prosím, vyplňte všechna pole včetně registračního kódu",
         variant: "destructive"
       });
       return;
@@ -95,6 +96,23 @@ const Auth = () => {
 
     setLoading(true);
     try {
+      // First, validate the invite code
+      const { data: codeData, error: codeError } = await supabase
+        .from('admin_invite_codes')
+        .select('*')
+        .eq('code', inviteCode.toUpperCase())
+        .eq('used', false)
+        .single();
+
+      if (codeError || !codeData) {
+        throw new Error('Neplatný nebo již použitý registrační kód');
+      }
+
+      // Check if code is expired
+      if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
+        throw new Error('Registrační kód vypršel');
+      }
+
       const redirectUrl = `${window.location.origin}/admin`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -110,6 +128,25 @@ const Auth = () => {
       }
 
       if (data.user) {
+        // Mark invite code as used
+        await supabase
+          .from('admin_invite_codes')
+          .update({ 
+            used: true, 
+            used_by_email: email,
+            used_at: new Date().toISOString()
+          })
+          .eq('id', codeData.id);
+
+        // Add user to admin_users table
+        await supabase
+          .from('admin_users')
+          .insert({
+            user_id: data.user.id,
+            email: email,
+            is_main_admin: false
+          });
+
         toast({
           title: "Registrace úspěšná",
           description: "Zkontrolujte si email pro potvrzení účtu"
@@ -125,6 +162,8 @@ const Auth = () => {
         errorMessage = "Heslo musí mít alespoň 6 znaků";
       } else if (error.message?.includes('Password should be at least 6 characters')) {
         errorMessage = "Heslo musí mít alespoň 6 znaků";
+      } else if (error.message?.includes('registrační kód')) {
+        errorMessage = error.message;
       }
       
       toast({
@@ -217,6 +256,21 @@ const Auth = () => {
               
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="text"
+                        placeholder="Registrační kód"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                        className="pl-10"
+                        required
+                        maxLength={8}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />

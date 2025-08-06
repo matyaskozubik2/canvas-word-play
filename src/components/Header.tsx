@@ -1,7 +1,8 @@
 
-import React from 'react';
-import { Moon, Sun, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { Moon, Sun, Palette, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -9,6 +10,10 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode }) => {
+  const navigate = useNavigate();
+  const [showLoginTooltip, setShowLoginTooltip] = useState(false);
+  const [showThemeTooltip, setShowThemeTooltip] = useState(false);
+
   return (
     <header className="p-6 flex justify-between items-center">
       <div className="flex items-center space-x-3">
@@ -20,9 +25,45 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode }) => {
         </h1>
       </div>
       
-      <Button variant="outline" size="icon" onClick={toggleDarkMode} className="rounded-full hover:scale-105 transition-transform">
-        {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      </Button>
+      <div className="flex items-center space-x-2">
+        {/* Login Button */}
+        <div className="relative">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/auth')}
+            onMouseEnter={() => setShowLoginTooltip(true)}
+            onMouseLeave={() => setShowLoginTooltip(false)}
+            className="rounded-full hover:scale-105 transition-all duration-200 border-primary/20 hover:border-primary/40"
+          >
+            <User className="w-5 h-5" />
+          </Button>
+          {showLoginTooltip && (
+            <div className="absolute right-0 top-full mt-2 px-3 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-lg border whitespace-nowrap opacity-0 animate-in fade-in-0 zoom-in-95 hidden md:block">
+              Přihlásit se
+            </div>
+          )}
+        </div>
+
+        {/* Theme Toggle Button */}
+        <div className="relative">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={toggleDarkMode}
+            onMouseEnter={() => setShowThemeTooltip(true)}
+            onMouseLeave={() => setShowThemeTooltip(false)}
+            className="rounded-full hover:scale-105 transition-all duration-200 border-primary/20 hover:border-primary/40"
+          >
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
+          {showThemeTooltip && (
+            <div className="absolute right-0 top-full mt-2 px-3 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-lg border whitespace-nowrap opacity-0 animate-in fade-in-0 zoom-in-95 hidden md:block">
+              Přepnout režim
+            </div>
+          )}
+        </div>
+      </div>
     </header>
   );
 };
