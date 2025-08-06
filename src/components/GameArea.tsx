@@ -16,6 +16,8 @@ interface GameAreaProps {
   displayWord: string;
   wordLength: number;
   onSelectWord: (word: string) => void;
+  gameId?: string | null;
+  playerId?: string | null;
 }
 
 export const GameArea: React.FC<GameAreaProps> = ({
@@ -27,7 +29,9 @@ export const GameArea: React.FC<GameAreaProps> = ({
   wordOptions,
   displayWord,
   wordLength,
-  onSelectWord
+  onSelectWord,
+  gameId,
+  playerId
 }) => {
   return (
     <Card className="h-full overflow-hidden">
@@ -80,6 +84,9 @@ export const GameArea: React.FC<GameAreaProps> = ({
             <DrawingCanvas 
               canDraw={false}
               className="w-full h-full rounded-xl"
+              gameId={gameId}
+              playerId={playerId}
+              isCurrentDrawer={isCurrentDrawer}
             />
             {isCurrentDrawer && wordOptions && (
               <WordSelection wordOptions={wordOptions} onSelectWord={onSelectWord} />
@@ -97,6 +104,9 @@ export const GameArea: React.FC<GameAreaProps> = ({
           <DrawingCanvas 
             canDraw={isCurrentDrawer}
             className="w-full h-full rounded-xl border-2 border-gray-200 dark:border-gray-700"
+            gameId={gameId}
+            playerId={playerId}
+            isCurrentDrawer={isCurrentDrawer}
           />
         )}
       </CardContent>

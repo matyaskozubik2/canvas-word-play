@@ -167,6 +167,8 @@ const Game = () => {
             displayWord={getDisplayWord()}
             wordLength={gameState.currentWord.length}
             onSelectWord={selectWord}
+            gameId={gameId}
+            playerId={playerId}
           />
         </div>
       </div>

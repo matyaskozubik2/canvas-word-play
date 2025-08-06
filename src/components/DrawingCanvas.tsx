@@ -3,18 +3,35 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Palette, Eraser, RotateCcw, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { useRealtimeDrawing } from '@/hooks/useRealtimeDrawing';
 
 interface DrawingCanvasProps {
   canDraw: boolean;
   className?: string;
+  gameId?: string | null;
+  playerId?: string | null;
+  isCurrentDrawer?: boolean;
 }
 
-export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ canDraw, className = '' }) => {
+export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ 
+  canDraw, 
+  className = '', 
+  gameId = null, 
+  playerId = null, 
+  isCurrentDrawer = false 
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(5);
   const [isEraser, setIsEraser] = useState(false);
+
+  const { broadcastStroke, broadcastClear } = useRealtimeDrawing({
+    gameId,
+    playerId,
+    isCurrentDrawer,
+    canvasRef
+  });
 
   const colors = [
     '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
@@ -56,6 +73,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ canDraw, className
 
     ctx.beginPath();
     ctx.moveTo(x, y);
+
+    // Broadcast start of stroke for real-time sync
+    if (isCurrentDrawer) {
+      broadcastStroke({
+        x,
+        y,
+        color: currentColor,
+        size: brushSize,
+        isEraser,
+        type: 'start'
+      });
+    }
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -82,6 +111,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ canDraw, className
 
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    // Broadcast drawing stroke for real-time sync
+    if (isCurrentDrawer) {
+      broadcastStroke({
+        x,
+        y,
+        color: currentColor,
+        size: brushSize,
+        isEraser,
+        type: 'draw'
+      });
+    }
   };
 
   const stopDrawing = () => {
@@ -98,6 +139,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ canDraw, className
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Broadcast clear action for real-time sync
+    if (isCurrentDrawer) {
+      broadcastClear();
+    }
   };
 
   const downloadCanvas = () => {
