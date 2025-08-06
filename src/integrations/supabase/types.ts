@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by_admin: string
+          expires_at: string | null
+          id: string
+          used: boolean
+          used_at: string | null
+          used_by_email: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by_admin: string
+          expires_at?: string | null
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          used_by_email?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by_admin?: string
+          expires_at?: string | null
+          id?: string
+          used?: boolean
+          used_at?: string | null
+          used_by_email?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string | null
@@ -251,6 +284,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_room_code: {
         Args: Record<PropertyKey, never>
         Returns: string
