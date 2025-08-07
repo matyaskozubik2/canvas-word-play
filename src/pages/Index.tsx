@@ -210,7 +210,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 transition-all duration-500">
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} onShowQRScanner={() => setShowQRScanner(true)} />
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-12">

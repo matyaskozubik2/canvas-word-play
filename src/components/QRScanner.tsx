@@ -57,7 +57,14 @@ export const QRScanner: React.FC<QRScannerProps> = ({ isVisible, onClose, onCode
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    if (!context) {
+      requestAnimationFrame(scanFrame);
+      return;
+    }
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(scanFrame);
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
