@@ -175,6 +175,7 @@ export const gameService = {
       .update({
         phase: 'word-selection',
         current_drawer_id: firstDrawer.id,
+        current_round: 1,
         word_options: this.generateWordOptions(),
         time_left: 30
       })
@@ -257,6 +258,61 @@ export const gameService = {
       });
 
     if (error) throw error;
+  },
+
+  async endRound(gameId: string): Promise<void> {
+    // Advance to next round or finish the game
+    const { data: game, error: gameError } = await supabase
+      .from('games')
+      .select('id, current_round, total_rounds, current_drawer_id')
+      .eq('id', gameId)
+      .single();
+
+    if (gameError) throw gameError;
+    if (!game) return;
+
+    // If this was the last round, show results
+    if ((game.current_round || 0) >= (game.total_rounds || 0)) {
+      const { error } = await supabase
+        .from('games')
+        .update({ phase: 'results', time_left: 0 })
+        .eq('id', gameId);
+      if (error) throw error;
+      return;
+    }
+
+    // Determine next drawer
+    const players = await this.getGamePlayers(gameId);
+    let nextDrawerId = game.current_drawer_id as string | undefined;
+    if (players.length > 0) {
+      const currentIdx = players.findIndex(p => p.id === game.current_drawer_id);
+      const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % players.length : 0;
+      nextDrawerId = players[nextIdx]?.id || nextDrawerId;
+    }
+
+    // Reset guessed flags for all players
+    const { error: resetError } = await supabase
+      .from('players')
+      .update({ has_guessed_correctly: false })
+      .eq('game_id', gameId);
+    if (resetError) {
+      console.error('Error resetting players guess flags:', resetError);
+    }
+
+    // Move to next round and back to word selection
+    const { error: updateError } = await supabase
+      .from('games')
+      .update({
+        current_round: (game.current_round || 0) + 1,
+        phase: 'word-selection',
+        current_drawer_id: nextDrawerId,
+        current_word: null,
+        word_options: this.generateWordOptions(),
+        time_left: 30
+      })
+      .eq('id', gameId);
+
+    if (updateError) throw updateError;
   },
 
   async getChatMessages(gameId: string): Promise<ChatMessage[]> {

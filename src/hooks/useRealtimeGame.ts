@@ -130,6 +130,42 @@ export const useRealtimeGame = (gameId: string | null, playerId: string | null) 
     };
   }, [gameId]);
 
+  // Local countdown timer and phase transitions
+  useEffect(() => {
+    if (!game) return;
+
+    const isHost = players.some(p => p.id === playerId && p.is_host);
+    const phase = game.phase;
+    const gameIdLocal = game.id;
+    let time = game.time_left ?? 0;
+
+    if ((phase === 'drawing' || phase === 'word-selection') && time > 0) {
+      const interval = setInterval(() => {
+        time = Math.max(0, (time || 0) - 1);
+        setGame(prev => (prev ? { ...prev, time_left: time } : prev));
+
+        if (time <= 0) {
+          clearInterval(interval);
+          if (isHost) {
+            if (phase === 'drawing') {
+              gameService.endRound(gameIdLocal).catch(console.error);
+            } else if (phase === 'word-selection') {
+              const options = game.word_options || [];
+              const random = options[Math.floor(Math.random() * options.length)];
+              if (random) {
+                gameService.selectWord(gameIdLocal, random).catch(console.error);
+              } else {
+                gameService.endRound(gameIdLocal).catch(console.error);
+              }
+            }
+          }
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [game?.phase, game?.id, players, playerId]);
+
   // Game actions
   const startGame = useCallback(async () => {
     if (!gameId) return;
