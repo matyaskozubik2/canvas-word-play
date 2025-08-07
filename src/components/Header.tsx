@@ -31,13 +31,13 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onShow
               variant="outline" 
               size="icon"
               onClick={() => navigate('/auth')}
-              className="rounded-full hover:scale-105 transition-all duration-200 border-primary/20 hover:border-primary/40"
+              className="rounded-full hover-scale border-primary/20 hover:border-primary/40"
               aria-label="Přihlásit se"
             >
               <User className="w-5 h-5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="hidden md:block">
+          <TooltipContent side="bottom" className="hidden md:block animate-fade-in">
             Přihlásit se
           </TooltipContent>
         </Tooltip>
@@ -48,13 +48,13 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onShow
               variant="outline" 
               size="icon" 
               onClick={onShowQRScanner}
-              className="rounded-full hover:scale-105 transition-all duration-200 border-primary/20 hover:border-primary/40"
+              className="rounded-full hover-scale border-primary/20 hover:border-primary/40"
               aria-label="Skenovat QR kód"
             >
               <QrCode className="w-5 h-5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="hidden md:block">
+          <TooltipContent side="bottom" className="hidden md:block animate-fade-in">
             Skenovat QR kód
           </TooltipContent>
         </Tooltip>
@@ -65,13 +65,13 @@ export const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode, onShow
               variant="outline" 
               size="icon" 
               onClick={toggleDarkMode}
-              className="rounded-full hover:scale-105 transition-all duration-200 border-primary/20 hover:border-primary/40"
+              className="rounded-full hover-scale border-primary/20 hover:border-primary/40"
               aria-label="Přepnout režim"
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="hidden md:block">
+          <TooltipContent side="bottom" className="hidden md:block animate-fade-in">
             Přepnout režim
           </TooltipContent>
         </Tooltip>
