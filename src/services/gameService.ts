@@ -64,6 +64,24 @@ export const gameService = {
 
     console.log('Game updated with host_id:', updatedGame);
 
+    try {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const device = /Mobi|Android|iPhone|iPad/i.test(ua) ? 'mobile' : 'desktop';
+      const locale = typeof navigator !== 'undefined' ? (Intl.DateTimeFormat().resolvedOptions().locale || navigator.language || '') : '';
+      const country = (locale.split('-')[1] || locale || null) as string | null;
+      await supabase.from('player_activity').insert({
+        player_id: player.id,
+        game_id: updatedGame.id,
+        player_name: player.name,
+        room_code: updatedGame.room_code,
+        device,
+        country,
+        user_agent: ua
+      });
+    } catch (e) {
+      console.warn('Failed to log player activity (createGame):', e);
+    }
+
     return { game: updatedGame, player };
   },
 
@@ -120,6 +138,24 @@ export const gameService = {
     }
 
     console.log('Player joined:', player);
+
+    try {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const device = /Mobi|Android|iPhone|iPad/i.test(ua) ? 'mobile' : 'desktop';
+      const locale = typeof navigator !== 'undefined' ? (Intl.DateTimeFormat().resolvedOptions().locale || navigator.language || '') : '';
+      const country = (locale.split('-')[1] || locale || null) as string | null;
+      await supabase.from('player_activity').insert({
+        player_id: player.id,
+        game_id: game.id,
+        player_name: player.name,
+        room_code: game.room_code,
+        device,
+        country,
+        user_agent: ua
+      });
+    } catch (e) {
+      console.warn('Failed to log player activity (joinGame):', e);
+    }
 
     return { game, player };
   },

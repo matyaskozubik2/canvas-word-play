@@ -235,6 +235,42 @@ export type Database = {
         }
         Relationships: []
       }
+      player_activity: {
+        Row: {
+          country: string | null
+          created_at: string
+          device: string
+          game_id: string | null
+          id: string
+          player_id: string | null
+          player_name: string
+          room_code: string
+          user_agent: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device: string
+          game_id?: string | null
+          id?: string
+          player_id?: string | null
+          player_name: string
+          room_code: string
+          user_agent?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device?: string
+          game_id?: string | null
+          id?: string
+          player_id?: string | null
+          player_name?: string
+          room_code?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           avatar_color: string | null
@@ -295,6 +331,14 @@ export type Database = {
       increment_player_score: {
         Args: { player_id: string; points: number }
         Returns: undefined
+      }
+      is_admin: {
+        Args: { uid: string }
+        Returns: boolean
+      }
+      is_main_admin: {
+        Args: { uid: string }
+        Returns: boolean
       }
     }
     Enums: {

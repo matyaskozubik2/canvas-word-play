@@ -19,6 +19,8 @@ const Admin = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activity, setActivity] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
   const {
     games,
     selectedGame,
@@ -59,6 +61,7 @@ const Admin = () => {
   useEffect(() => {
     if (session) {
       fetchInviteCodes();
+      fetchActivity();
     }
   }, [session]);
 
@@ -73,6 +76,37 @@ const Admin = () => {
       setInviteCodes(data || []);
     } catch (error) {
       console.error('Error fetching invite codes:', error);
+    }
+  };
+
+  const fetchActivity = async () => {
+    setActivityLoading(true);
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('player_activity')
+        .select('*')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setActivity(data || []);
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  const deleteActivity = async (id: string) => {
+    try {
+      const { error } = await supabase.from('player_activity').delete().eq('id', id);
+      if (error) throw error;
+      setActivity((prev) => prev.filter((a) => a.id !== id));
+      toast({ title: 'Smazáno', description: 'Záznam byl smazán' });
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      toast({ title: 'Chyba', description: 'Nepodařilo se smazat záznam', variant: 'destructive' });
     }
   };
 
@@ -343,6 +377,45 @@ const Admin = () => {
                     ))
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Historie aktivit hráčů (7 dní) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="w-5 h-5" />
+                  <span>Historie aktivit (7 dní)</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {activityLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                  </div>
+                ) : activity.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-4">Žádná aktivita</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {activity.map((a) => (
+                      <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="w-4 h-4" />
+                            <span className="font-medium">{a.player_name}</span>
+                            <span className="text-gray-500">({a.room_code})</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(a.created_at).toLocaleString()} • {a.device}{a.country ? ` • ${a.country}` : ''}
+                          </div>
+                        </div>
+                        <Button onClick={() => deleteActivity(a.id)} variant="ghost" size="sm">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
