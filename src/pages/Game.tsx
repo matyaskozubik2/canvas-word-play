@@ -7,12 +7,15 @@ import { GameSidebar } from '@/components/GameSidebar';
 import { useRealtimeGame } from '@/hooks/useRealtimeGame';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { OrientationOverlay } from '@/components/OrientationOverlay';
+import { useIsPortrait } from '@/hooks/use-orientation';
 
 const Game = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const isPortrait = useIsPortrait();
   const { gameId, playerId, playerName } = location.state || {};
 
   const {
@@ -116,6 +119,7 @@ const Game = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900 overflow-hidden">
+      <OrientationOverlay isActive={isMobile && isPortrait} />
       <GameHeader
         roomCode={game.room_code}
         currentRound={gameState.currentRound}

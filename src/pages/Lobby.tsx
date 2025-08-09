@@ -11,12 +11,17 @@ import { PlayerList } from '@/components/PlayerList';
 import { gameService } from '@/services/gameService';
 import { useRealtimeGame } from '@/hooks/useRealtimeGame';
 import { Game, Player } from '@/types/game';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsPortrait } from '@/hooks/use-orientation';
+import { OrientationOverlay } from '@/components/OrientationOverlay';
 
 const Lobby = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { playerName, roomCode: initialRoomCode, isHost, isRandomGame } = location.state || {};
+  const isMobile = useIsMobile();
+  const isPortrait = useIsPortrait();
 
   const [gameData, setGameData] = useState<{ game: Game; player: Player } | null>(null);
   const [gameSettings, setGameSettings] = useState({
@@ -246,6 +251,7 @@ const Lobby = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-blue-900">
+      <OrientationOverlay isActive={isMobile && isPortrait} />
       {/* Header */}
       <header className="p-6 flex justify-between items-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-4">
