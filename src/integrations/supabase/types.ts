@@ -282,6 +282,7 @@ export type Database = {
           joined_at: string | null
           name: string
           score: number | null
+          user_id: string | null
         }
         Insert: {
           avatar_color?: string | null
@@ -293,6 +294,7 @@ export type Database = {
           joined_at?: string | null
           name: string
           score?: number | null
+          user_id?: string | null
         }
         Update: {
           avatar_color?: string | null
@@ -304,6 +306,7 @@ export type Database = {
           joined_at?: string | null
           name?: string
           score?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -339,6 +342,14 @@ export type Database = {
       is_main_admin: {
         Args: { uid: string }
         Returns: boolean
+      }
+      is_player_in_game: {
+        Args: { _game_id: string }
+        Returns: boolean
+      }
+      join_game: {
+        Args: { p_room_code: string; p_player_name: string }
+        Returns: Json
       }
     }
     Enums: {

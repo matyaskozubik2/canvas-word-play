@@ -4,6 +4,13 @@ import { Game, Player, ChatMessage } from '@/types/game';
 export const gameService = {
   // Game operations
   async createGame(hostName: string, settings: any): Promise<{ game: Game; player: Player }> {
+    // Ensure user is authenticated anonymously
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const { error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw authError;
+    }
+
     const roomCode = await this.generateRoomCode();
     
     console.log('Creating game with room code:', roomCode);
@@ -35,7 +42,8 @@ export const gameService = {
         game_id: game.id,
         name: hostName,
         is_host: true,
-        avatar_color: this.generateAvatarColor(hostName)
+        avatar_color: this.generateAvatarColor(hostName),
+        user_id: (await supabase.auth.getUser()).data.user?.id
       })
       .select()
       .single();
@@ -88,56 +96,28 @@ export const gameService = {
   async joinGame(roomCode: string, playerName: string): Promise<{ game: Game; player: Player }> {
     console.log('Attempting to join game with room code:', roomCode);
     
-    // First check if the game exists
-    const { data: game, error: gameError } = await supabase
-      .from('games')
-      .select('*')
-      .eq('room_code', roomCode.toUpperCase())
-      .maybeSingle();
-
-    if (gameError) {
-      console.error('Error fetching game:', gameError);
-      throw gameError;
+    // Ensure user is authenticated anonymously
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const { error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw authError;
     }
-
-    if (!game) {
-      console.error('Game not found with room code:', roomCode);
-      throw new Error('Místnost s tímto kódem neexistuje');
-    }
-
-    console.log('Game found:', game);
-
-    // Check if game is full
-    const players = await this.getGamePlayers(game.id);
-    console.log('Current players:', players);
     
-    if (players.length >= game.max_players) {
-      throw new Error('Hra je plná');
+    // Use secure RPC function to join game
+    const { data: result, error } = await supabase.rpc('join_game', {
+      p_room_code: roomCode.toUpperCase(),
+      p_player_name: playerName
+    });
+
+    if (error) {
+      console.error('Error joining game via RPC:', error);
+      throw error;
     }
 
-    // Check if game is still in waiting phase
-    if (game.phase !== 'waiting') {
-      throw new Error('Hra již začala');
-    }
+    console.log('Successfully joined game via RPC:', result);
 
-    // Create new player
-    const { data: player, error: playerError } = await supabase
-      .from('players')
-      .insert({
-        game_id: game.id,
-        name: playerName,
-        is_host: false,
-        avatar_color: this.generateAvatarColor(playerName)
-      })
-      .select()
-      .single();
-
-    if (playerError) {
-      console.error('Error creating player:', playerError);
-      throw playerError;
-    }
-
-    console.log('Player joined:', player);
+    // Type assertion for RPC result
+    const gameResult = result as unknown as { game: Game; player: Player };
 
     try {
       const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -145,10 +125,10 @@ export const gameService = {
       const locale = typeof navigator !== 'undefined' ? (Intl.DateTimeFormat().resolvedOptions().locale || navigator.language || '') : '';
       const country = (locale.split('-')[1] || locale || null) as string | null;
       await supabase.from('player_activity').insert({
-        player_id: player.id,
-        game_id: game.id,
-        player_name: player.name,
-        room_code: game.room_code,
+        player_id: gameResult.player.id,
+        game_id: gameResult.game.id,
+        player_name: gameResult.player.name,
+        room_code: gameResult.game.room_code,
         device,
         country,
         user_agent: ua
@@ -157,7 +137,7 @@ export const gameService = {
       console.warn('Failed to log player activity (joinGame):', e);
     }
 
-    return { game, player };
+    return gameResult;
   },
 
   async getGameByRoomCode(roomCode: string): Promise<Game | null> {
